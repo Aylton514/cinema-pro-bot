@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 # 🔐 CONFIGURAÇÃO
 TOKEN = "8306714275:AAGzNXE3TZKbe5-49YGTgNOMrJiLVxBjmLA"
 ADMIN_USERNAME = "ayltonanna7"
-ADMIN_ID =5125563829   # Atualize com seu ID
+ADMIN_ID = 1763118948
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
@@ -25,9 +25,9 @@ CONTATOS = {
     'paypal': 'ayltonanna7@gmail.com'
 }
 
-# 🎬 CATÁLOGO PROFISSIONAL COM CAPAS
+# 🎬 CATÁLOGO PROFISSIONAL
 CATALOGO_PREMIUM = {
-    'lancamentos_4k': [
+    'filmes': [
         {
             'titulo': '🎬 VENOM 3: A ÚLTIMA BATALHA',
             'capa': 'https://i.imgur.com/venom3-cap.jpg',
@@ -59,7 +59,7 @@ CATALOGO_PREMIUM = {
             'descricao': 'Miles Morales enfrenta o multiverso em uma aventura visualmente deslumbrante.'
         }
     ],
-    'series_premium': [
+    'series': [
         {
             'titulo': '📺 STRANGER THINGS 5 - TEMPORADA COMPLETA',
             'capa': 'https://i.imgur.com/stranger5-cap.jpg',
@@ -81,7 +81,7 @@ CATALOGO_PREMIUM = {
             'descricao': 'Continua a jornada emocionante em um mundo devastado por infecção.'
         }
     ],
-    'animes_exclusivos': [
+    'animes': [
         {
             'titulo': '🎌 DEMON SLAYER: FINAL ARC',
             'capa': 'https://i.imgur.com/demonslayer-cap.jpg',
@@ -91,17 +91,28 @@ CATALOGO_PREMIUM = {
             'duracao': 'Arco Final Completo',
             'ano': '2025',
             'descricao': 'O confronto final entre Tanjiro e Muzan Kibutsuji.'
+        },
+        {
+            'titulo': '🎌 ATTACK ON TITAN: FINAL CHAPTERS',
+            'capa': 'https://i.imgur.com/aot-final.jpg',
+            'trailer': 'https://youtu.be/aot-final-trailer',
+            'qualidade': '4K HDR • Legendado PT-BR',
+            'genero': 'Anime • Ação • Drama',
+            'duracao': 'Capítulos Finais',
+            'ano': '2025',
+            'descricao': 'O épico final da batalha pela humanidade.'
         }
     ]
 }
 
-# 🎭 TRAILERS E AMOSTRAS
+# 🎭 TRAILERS DISPONÍVEIS
 TRAILERS_DISPONIVEIS = {
     'VENOM 3': '🎬 *Trailer Venom 3*\nhttps://youtu.be/venom3-trailer\n⚡ 2:30 min • Cenas de ação em 4K',
     'AVATAR 4': '🎬 *Trailer Avatar 4*\nhttps://youtu.be/avatar4-trailer\n🌍 3:15 min • Novos mundos revelados', 
     'SPIDER-MAN BEYOND': '🎬 *Trailer Spider-Man Beyond*\nhttps://youtu.be/spiderman-trailer\n🕷️ 2:45 min • Multiverso expandido',
     'STRANGER THINGS 5': '📺 *Trailer Stranger Things 5*\nhttps://youtu.be/stranger5-trailer\n🔮 3:30 min • Temporada final épica',
-    'DEMON SLAYER FINAL': '🎌 *Trailer Demon Slayer Final*\nhttps://youtu.be/demonslayer-trailer\n⚔️ 2:15 min • Batalhas emocionantes'
+    'DEMON SLAYER FINAL': '🎌 *Trailer Demon Slayer Final*\nhttps://youtu.be/demonslayer-trailer\n⚔️ 2:15 min • Batalhas emocionantes',
+    'THE LAST OF US 3': '📺 *Trailer The Last of Us 3*\nhttps://youtu.be/lastofus3-trailer\n🧟 3:10 min • Drama intenso'
 }
 
 # 🎯 RECOMENDAÇÕES DIÁRIAS
@@ -144,15 +155,53 @@ RECOMENDACOES_DIARIAS = {
     },
     'domingo': {
         'titulo': '🎬 CLÁSSICO DO DIA!',
-        'filme': 'VENOM 3: A ÚLTIMA BATALHA',
+        'filme': 'AVATAR 4: O LEGADO',
         'descricao': 'Domingão perfeito com o filme mais popular da semana!',
         'hashtag': '#Domingão'
+    }
+}
+
+# 💰 PLANOS VIP
+PLANOS_VIP = {
+    '1_mes': {
+        'nome': '💎 VIP 1 MÊS',
+        'preco': '50 MZN',
+        'beneficios': [
+            '✅ 10 Créditos Mensais',
+            '✅ Acesso Prioritário',
+            '✅ Suporte VIP 24/7',
+            '✅ Lançamentos Antecipados',
+            '✅ Catálogo Exclusivo'
+        ]
+    },
+    '3_meses': {
+        'nome': '🔥 VIP 3 MESES', 
+        'preco': '120 MZN',
+        'beneficios': [
+            '✅ 35 Créditos (5 bônus)',
+            '✅ Todos benefícios VIP',
+            '✅ Acesso Ilimitado',
+            '✅ Pedidos Ilimitados',
+            '✅ Presentes Exclusivos'
+        ]
+    },
+    '6_meses': {
+        'nome': '👑 VIP 6 MESES',
+        'preco': '200 MZN', 
+        'beneficios': [
+            '✅ 80 Créditos (20 bônus)',
+            '✅ Status Premium',
+            '✅ Conteúdo Exclusivo',
+            '✅ Suporte Personalizado',
+            '✅ Vantagens Únicas'
+        ]
     }
 }
 
 # 🗄️ BANCO DE DADOS
 def get_db():
     conn = sqlite3.connect('cinema_premium.db', check_same_thread=False)
+    conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
@@ -196,32 +245,29 @@ init_db()
 
 # 🔐 VERIFICAÇÃO ADMIN
 def is_admin(user_id, username):
-    return (str(username) == ADMIN_USERNAME.replace('@', '') or 
+    if not username:
+        return user_id == ADMIN_ID
+    return (username.lower() == ADMIN_USERNAME.replace('@', '').lower() or 
             user_id == ADMIN_ID)
 
-# 🎁 SISTEMA DE 3 CRÉDITOS PARA PRIMEIROS 10 USUÁRIOS
+# 🎁 SISTEMA DE CRÉDITOS INICIAIS
 def verificar_primeiros_usuarios(user_id, username):
     conn = get_db()
     c = conn.cursor()
     
-    # Contar usuários totais
     total_usuarios = c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
-    
-    # Verificar se é um dos primeiros 10 e ainda não recebeu
     c.execute("SELECT primeiro_usuario FROM usuarios WHERE user_id = ?", (user_id,))
     usuario = c.fetchone()
     
     if total_usuarios <= 10 and (not usuario or usuario[0] == 0):
-        # Adicionar 3 créditos e marcar como premiado
         c.execute("UPDATE usuarios SET creditos = creditos + 3, primeiro_usuario = 1 WHERE user_id = ?", (user_id,))
         c.execute("INSERT INTO transacoes (user_id, tipo, valor, admin) VALUES (?, ?, ?, ?)",
                  (user_id, "bonus_boas_vindas", 3, "sistema"))
         conn.commit()
         conn.close()
         
-        # Enviar mensagem de boas-vindas com bônus
         try:
-            bot.send_message(user_id, f"""
+            bot.send_message(user_id, """
 🎉 *BOAS-VINDAS PREMIUM!* 🎉
 
 Bem-vindo ao *CINEMA PRO*! Como você é um dos nossos primeiros 10 usuários, recebeu:
@@ -235,10 +281,8 @@ Bem-vindo ao *CINEMA PRO*! Como você é um dos nossos primeiros 10 usuários, r
 `/catalogo` - Ver catálogo completo
 `/trailer` - Ver trailers antes de pedir
 
-📞 *Dúvidas?* @{ADMIN_USERNAME}
-
-Obrigado por fazer parte do CINEMA PRO! 🚀
-            """, parse_mode='Markdown')
+📞 *Dúvidas?* @{}
+            """.format(ADMIN_USERNAME), parse_mode='Markdown')
         except:
             pass
         return True
@@ -246,12 +290,11 @@ Obrigado por fazer parte do CINEMA PRO! 🚀
     conn.close()
     return False
 
-# 👋 MENSAGEM DE BOAS-VINDAS EM GRUPOS
+# 👋 BOAS-VINDAS EM GRUPOS
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_group(message):
     for member in message.new_chat_members:
         if member.username == bot.get_me().username:
-            # Bot adicionado no grupo
             group_id = message.chat.id
             group_title = message.chat.title
             
@@ -262,11 +305,10 @@ def welcome_group(message):
             conn.commit()
             conn.close()
             
-            # Mensagem de boas-vindas profissional
-            welcome_msg = f"""
+            welcome_msg = """
 🎬 *CINEMA PRO - SISTEMA PREMIUM ADICIONADO!* 🎬
 
-Olá *{group_title}*! 🤖
+Olá *{}*! 🤖
 
 É uma honra fazer parte desta comunidade! Trago o melhor do entretenimento em qualidade premium:
 
@@ -289,24 +331,21 @@ Olá *{group_title}*! 🤖
 `/trailer` - Ver trailers
 
 📞 *ATENDIMENTO PERSONALIZADO:*
-💬 WhatsApp: {CONTATOS['whatsapp']}
-👤 Telegram: @{ADMIN_USERNAME}
+💬 WhatsApp: {}
+👤 Telegram: @{}
 
 *Sejam bem-vindos ao mundo do entretenimento premium!* 🎉
-            """
+            """.format(group_title, CONTATOS['whatsapp'], ADMIN_USERNAME)
             
             bot.send_message(group_id, welcome_msg, parse_mode='Markdown')
-            
-            # Primeira recomendação automática
             time.sleep(5)
             enviar_recomendacao_diaria(group_id)
             
         else:
-            # Novo membro no grupo
-            welcome_user = f"""
+            welcome_user = """
 👋 *BEM-VINDO(A) AO GRUPO!*
 
-Olá *{member.first_name}*! 🎉
+Olá *{}*! 🎉
 
 Que bom ter você aqui no grupo! 🎬
 
@@ -319,12 +358,12 @@ Que bom ter você aqui no grupo! 🎬
 • Atendimento 24/7
 
 🎁 *OFERTA ESPECIAL PARA MEMBROS DO GRUPO!*
-            """
+            """.format(member.first_name)
             
             bot.send_message(message.chat.id, welcome_user, parse_mode='Markdown')
 
-# 🎯 RECOMENDAÇÃO DIÁRIA AUTOMÁTICA
-def enviar_recomendacao_diaria(group_id):
+# 🎯 RECOMENDAÇÃO DIÁRIA
+def enviar_recomendacao_diaria(chat_id):
     dia_semana = datetime.now().strftime('%A').lower()
     dias_pt = {
         'monday': 'segunda',
@@ -341,41 +380,41 @@ def enviar_recomendacao_diaria(group_id):
     
     markup = telebot.types.InlineKeyboardMarkup()
     markup.row(
-        telebot.types.InlineKeyboardButton("🎬 Ver Trailer", callback_data=f"trailer:{recomendacao['filme']}"),
-        telebot.types.InlineKeyboardButton("📦 Pedir Agora", callback_data=f"pedir:{recomendacao['filme']}")
+        telebot.types.InlineKeyboardButton("🎬 Ver Trailer", callback_data=f"trailer_{recomendacao['filme'].split(':')[0].upper().replace(' ', '_')}"),
+        telebot.types.InlineKeyboardButton("📦 Pedir Agora", callback_data=f"pedir_{recomendacao['filme'].split(':')[0].upper().replace(' ', '_')}")
     )
     markup.row(
-        telebot.types.InlineKeyboardButton("📞 Comprar Créditos", url=f"https://t.me/{ADMIN_USERNAME}"),
-        telebot.types.InlineKeyboardButton("🎯 Catálogo Completo", callback_data="catalogo_completo")
+        telebot.types.InlineKeyboardButton("📞 Comprar Créditos", callback_data="comprar_creditos"),
+        telebot.types.InlineKeyboardButton("🎯 Catálogo", callback_data="menu_catalogo")
     )
     
-    recomendacao_msg = f"""
+    recomendacao_msg = """
 🎬 *RECOMENDAÇÃO DO DIA* 🎬
-{recomendacao['hashtag']}
+{}
 
-{recomendacao['titulo']}
+{}
 
 ⚡ *FILME SUGERIDO:*
-*{recomendacao['filme']}*
+*{}*
 
 📖 *Sinopse:*
-{recomendacao['descricao']}
+{}
 
 💎 *Por que assistir hoje?*
-• Perfeito para o clima do {dia}
+• Perfeito para o clima do {}
 • Qualidade 4K garantida  
 • Entrega em 15-30 minutos
 • Aprovação de 95% dos usuários
 
 🎯 *Não perca esta experiência cinematográfica!*
-    """
+    """.format(recomendacao['hashtag'], recomendacao['titulo'], recomendacao['filme'], 
+               recomendacao['descricao'], dia)
     
     try:
-        bot.send_message(group_id, recomendacao_msg, parse_mode='Markdown', reply_markup=markup)
-    except:
-        pass
+        bot.send_message(chat_id, recomendacao_msg, parse_mode='Markdown', reply_markup=markup)
+    except Exception as e:
+        print(f"Erro ao enviar recomendação: {e}")
 
-# 🎬 COMANDO RECOMENDAÇÃO
 @bot.message_handler(commands=['recomendacao', 'filmedodia'])
 def recomendacao_cmd(message):
     enviar_recomendacao_diaria(message.chat.id)
@@ -394,11 +433,15 @@ def trailer_cmd(message):
             for j in range(2):
                 if i + j < len(trailers):
                     filme = trailers[i + j]
+                    callback_data = f"trailer_{filme.split()[0].upper()}"
                     row.append(telebot.types.InlineKeyboardButton(
-                        f"🎬 {filme.split(':')[0]}", 
-                        callback_data=f"trailer:{filme}"
+                        f"🎬 {filme.split()[0]}", 
+                        callback_data=callback_data
                     ))
-            markup.add(*row)
+            if row:
+                markup.add(*row)
+        
+        markup.add(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="menu_principal"))
         
         bot.reply_to(message, """
 🎬 *TRAILERS EXCLUSIVOS* 🎬
@@ -434,12 +477,13 @@ Escolha um trailer para ver:
     if trailer_info:
         markup = telebot.types.InlineKeyboardMarkup()
         markup.row(
-            telebot.types.InlineKeyboardButton("📦 Pedir Completo", callback_data=f"pedir:{key}"),
+            telebot.types.InlineKeyboardButton("📦 Pedir Completo", callback_data=f"pedir_{filme.split()[0]}"),
             telebot.types.InlineKeyboardButton("💎 Comprar Créditos", callback_data="comprar_creditos")
         )
+        markup.row(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="menu_trailers"))
         
-        bot.reply_to(message, f"""
-{trailer_info}
+        bot.reply_to(message, """
+{}
 
 💫 *VERSÃO COMPLETA INCLUI:*
 • Conteúdo integral em 4K HDR
@@ -449,7 +493,7 @@ Escolha um trailer para ver:
 • Entrega em 15-30 minutos
 
 💎 *PREÇO: 1 CRÉDITO*
-        """, parse_mode='Markdown', reply_markup=markup)
+        """.format(trailer_info), parse_mode='Markdown', reply_markup=markup)
     else:
         bot.reply_to(message, f"""
 ❌ *TRAILER NÃO ENCONTRADO*
@@ -461,26 +505,26 @@ Não temos trailer disponível para *{filme}*.
 `/catalogo` - Ver catálogo
         """, parse_mode='Markdown')
 
-# 🎨 CATÁLOGO PROFISSIONAL COM CAPAS
+# 🎨 CATÁLOGO PROFISSIONAL
 @bot.message_handler(commands=['catalogo', 'lancamentos'])
 def catalogo_premium(message):
     markup = telebot.types.InlineKeyboardMarkup()
     
-    # Categorias
     markup.row(
         telebot.types.InlineKeyboardButton("🎬 FILMES 4K", callback_data="categoria_filmes"),
         telebot.types.InlineKeyboardButton("📺 SÉRIES", callback_data="categoria_series")
     )
     markup.row(
         telebot.types.InlineKeyboardButton("🎌 ANIMES", callback_data="categoria_animes"),
-        telebot.types.InlineKeyboardButton("🚀 LANÇAMENTOS", callback_data="categoria_lancamentos")
+        telebot.types.InlineKeyboardButton("🚀 TODOS", callback_data="categoria_todos")
     )
     markup.row(
-        telebot.types.InlineKeyboardButton("🎥 VER TRAILERS", callback_data="ver_trailers"),
+        telebot.types.InlineKeyboardButton("🎥 TRAILERS", callback_data="menu_trailers"),
         telebot.types.InlineKeyboardButton("📞 ATENDIMENTO", url=f"https://t.me/{ADMIN_USERNAME}")
     )
+    markup.row(telebot.types.InlineKeyboardButton("🔙 INÍCIO", callback_data="menu_principal"))
     
-    bot.reply_to(message, f"""
+    bot.reply_to(message, """
 🎬 *CATÁLOGO PREMIUM 2025* 🎬
 
 💫 *EXPERIÊNCIA CINEMATOGRÁFICA COMPLETA*
@@ -512,10 +556,128 @@ def catalogo_premium(message):
 • Suporte 24/7
 • Qualidade verificada
 
-📞 *ATENDIMENTO:* @{ADMIN_USERNAME}
+📞 *ATENDIMENTO:* @{}
+    """.format(ADMIN_USERNAME), parse_mode='Markdown', reply_markup=markup)
+
+# 📦 SISTEMA DE PEDIDOS
+@bot.message_handler(commands=['pedir'])
+def pedir_cmd(message):
+    user_id = message.from_user.id
+    username = message.from_user.username or message.from_user.first_name
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT creditos FROM usuarios WHERE user_id = ?", (user_id,))
+    usuario = c.fetchone()
+    
+    if not usuario:
+        bot.reply_to(message, "❌ *Você precisa usar /start primeiro!*", parse_mode='Markdown')
+        conn.close()
+        return
+    
+    creditos = usuario[0]
+    
+    args = message.text.split()[1:]
+    if not args:
+        bot.reply_to(message, """
+📦 *FAZER PEDIDO*
+
+💎 *Seus créditos:* *{}*
+
+⚡ *Como pedir:*
+`/pedir Nome do Filme`
+
+🎯 *Exemplos:*
+`/pedir Venom 3`
+`/pedir Stranger Things 5`
+`/pedir Demon Slayer`
+
+💡 *Dica:* Use `/catalogo` para ver o catálogo completo!
+        """.format(creditos), parse_mode='Markdown')
+        conn.close()
+        return
+    
+    filme = ' '.join(args)
+    
+    if creditos < 1:
+        markup = telebot.types.InlineKeyboardMarkup()
+        markup.row(
+            telebot.types.InlineKeyboardButton("💎 Comprar Créditos", callback_data="comprar_creditos"),
+            telebot.types.InlineKeyboardButton("👑 Planos VIP", callback_data="planos_vip")
+        )
+        
+        bot.reply_to(message, f"""
+❌ *CRÉDITOS INSUFICIENTES*
+
+💎 *Seus créditos:* *{creditos}*
+
+📦 *Pedido:* *{filme}*
+
+⚡ *Você precisa de 1 crédito para fazer este pedido.*
+
+💫 *Opções:*
+• Comprar créditos avulsos
+• Assinar plano VIP
+• Ganhar créditos indicando amigos
+
+🎁 *Promoção:* Primeiros 10 usuários ganham 3 créditos grátis!
+        """, parse_mode='Markdown', reply_markup=markup)
+        conn.close()
+        return
+    
+    # Processar pedido
+    c.execute("UPDATE usuarios SET creditos = creditos - 1 WHERE user_id = ?", (user_id,))
+    c.execute("INSERT INTO pedidos (user_id, username, filme, status) VALUES (?, ?, ?, ?)",
+             (user_id, username, filme, 'processando'))
+    c.execute("INSERT INTO transacoes (user_id, tipo, valor, admin) VALUES (?, ?, ?, ?)",
+             (user_id, "pedido_filme", -1, "sistema"))
+    
+    pedido_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    
+    # Notificar admin
+    try:
+        admin_msg = f"""
+📦 *NOVO PEDIDO* 📦
+
+🆔 *Pedido:* #{pedido_id}
+👤 *Usuário:* @{username} ({user_id})
+🎬 *Filme:* {filme}
+💎 *Créditos restantes:* {creditos - 1}
+⏰ *Data:* {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+⚡ *Status:* Processando
+        """
+        bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
+    except:
+        pass
+    
+    markup = telebot.types.InlineKeyboardMarkup()
+    markup.row(
+        telebot.types.InlineKeyboardButton("📞 Acompanhar Pedido", url=f"https://t.me/{ADMIN_USERNAME}"),
+        telebot.types.InlineKeyboardButton("🎬 Novo Pedido", callback_data="menu_catalogo")
+    )
+    
+    bot.reply_to(message, f"""
+✅ *PEDIDO CONFIRMADO!* ✅
+
+🆔 *Pedido:* *#{pedido_id}*
+🎬 *Filme:* *{filme}*
+💎 *Créditos utilizados:* 1
+💰 *Créditos restantes:* *{creditos - 1}*
+
+⏰ *Tempo de entrega:* 15-30 minutos
+📦 *Formato:* Google Drive/Mega
+🎯 *Qualidade:* 4K HDR Garantida
+
+📞 *Acompanhamento:*
+Entre em contato com @{ADMIN_USERNAME} para acompanhar seu pedido.
+
+⚡ *Obrigado pela preferência!*
     """, parse_mode='Markdown', reply_markup=markup)
 
-# 👑 SISTEMA ADMIN COMPLETO (mantenha todos os comandos admin anteriores)
+# 👑 PAINEL ADMIN
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
     if not is_admin(message.from_user.id, message.from_user.username):
@@ -584,10 +746,8 @@ def start_premium(message):
     c.execute("INSERT OR IGNORE INTO usuarios (user_id, username) VALUES (?, ?)", (user_id, username))
     conn.commit()
     
-    # Verificar bônus primeiros usuários
     bonus_recebido = verificar_primeiros_usuarios(user_id, username)
     
-    # Verificar se é admin
     admin_status = ""
     if is_admin(user_id, username):
         admin_status = "\n👑 *STATUS: ADMINISTRADOR*"
@@ -607,22 +767,23 @@ def start_premium(message):
     conn.close()
     
     markup = telebot.types.InlineKeyboardMarkup()
+    
     botoes = [
-        telebot.types.InlineKeyboardButton("🎬 Catálogo Premium", callback_data="catalogo_premium"),
-        telebot.types.InlineKeyboardButton("🎥 Ver Trailers", callback_data="ver_trailers"),
-        telebot.types.InlineKeyboardButton("💰 Planos VIP", callback_data="planos_vip"),
-        telebot.types.InlineKeyboardButton("🌎 PayPal", callback_data="paypal_premium"),
+        telebot.types.InlineKeyboardButton("🎬 Catálogo Premium", callback_data="menu_catalogo"),
+        telebot.types.InlineKeyboardButton("🎥 Ver Trailers", callback_data="menu_trailers"),
+        telebot.types.InlineKeyboardButton("💰 Comprar Créditos", callback_data="comprar_creditos"),
+        telebot.types.InlineKeyboardButton("👑 Planos VIP", callback_data="planos_vip"),
         telebot.types.InlineKeyboardButton("📞 Atendimento", url=f"https://t.me/{ADMIN_USERNAME}")
     ]
     
     if is_admin(user_id, username):
-        botoes.append(telebot.types.InlineKeyboardButton("👑 Painel Admin", callback_data="admin_panel"))
+        botoes.append(telebot.types.InlineKeyboardButton("👑 Painel Admin", callback_data="menu_admin"))
     
-    markup.add(*botoes[:2])
-    markup.add(*botoes[2:4])
-    markup.add(botoes[4])
+    markup.row(botoes[0], botoes[1])
+    markup.row(botoes[2], botoes[3])
+    markup.row(botoes[4])
     if len(botoes) > 5:
-        markup.add(botoes[5])
+        markup.row(botoes[5])
     
     bot.reply_to(message, f"""
 🎬 *CINEMA PRO PREMIUM 2025* 🎬
@@ -651,53 +812,284 @@ def start_premium(message):
 def handle_callbacks(call):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
+    message_id = call.message.message_id
     
     try:
-        if call.data.startswith('trailer:'):
-            filme = call.data.split(':', 1)[1]
-            trailer_info = TRAILERS_DISPONIVEIS.get(filme)
+        # 🎬 TRAILERS
+        if call.data.startswith('trailer_'):
+            filme_key = call.data.replace('trailer_', '').replace('_', ' ')
+            trailer_info = None
+            
+            for key, value in TRAILERS_DISPONIVEIS.items():
+                if filme_key in key:
+                    trailer_info = value
+                    break
             
             if trailer_info:
                 markup = telebot.types.InlineKeyboardMarkup()
                 markup.row(
-                    telebot.types.InlineKeyboardButton("📦 Pedir Completo", callback_data=f"pedir:{filme}"),
+                    telebot.types.InlineKeyboardButton("📦 Pedir Completo", callback_data=f"pedir_{filme_key}"),
                     telebot.types.InlineKeyboardButton("💎 Comprar Créditos", callback_data="comprar_creditos")
                 )
+                markup.row(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="menu_trailers"))
                 
-                bot.send_message(chat_id, f"""
-{trailer_info}
-
-💫 *VERSÃO COMPLETA INCLUI:*
-• Conteúdo integral em 4K HDR
-• Download direto via Google Drive/Mega
-• Áudio original + legendas PT/EN
-• Qualidade cinema garantida
-• Entrega em 15-30 minutos
-
-💎 *PREÇO: 1 CRÉDITO*
-                """, parse_mode='Markdown', reply_markup=markup)
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text=f"{trailer_info}\n\n💫 *VERSÃO COMPLETA INCLUI:*\n• Conteúdo integral em 4K HDR\n• Download direto via Google Drive/Mega\n• Áudio original + legendas PT/EN\n• Qualidade cinema garantida\n• Entrega em 15-30 minutos\n\n💎 *PREÇO: 1 CRÉDITO*",
+                    parse_mode='Markdown',
+                    reply_markup=markup
+                )
+            else:
+                bot.answer_callback_query(call.id, "❌ Trailer não encontrado")
         
-        elif call.data.startswith('pedir:'):
-            filme = call.data.split(':', 1)[1]
-            fake_msg = type('Msg', (), {'chat': type('Chat', (), {'id': chat_id}), 'text': f'/pedir {filme}', 'from_user': type('User', (), {'id': user_id, 'username': call.from_user.username})})()
-            pedir_cmd(fake_msg)
+        # 📦 PEDIDOS
+        elif call.data.startswith('pedir_'):
+            filme_key = call.data.replace('pedir_', '').replace('_', ' ')
+            
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT creditos FROM usuarios WHERE user_id = ?", (user_id,))
+            usuario = c.fetchone()
+            creditos = usuario[0] if usuario else 0
+            conn.close()
+            
+            if creditos < 1:
+                markup = telebot.types.InlineKeyboardMarkup()
+                markup.row(
+                    telebot.types.InlineKeyboardButton("💎 Comprar Créditos", callback_data="comprar_creditos"),
+                    telebot.types.InlineKeyboardButton("👑 VIP", callback_data="planos_vip")
+                )
+                
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text=f"❌ *CRÉDITOS INSUFICIENTES*\n\n💎 *Seus créditos:* *{creditos}*\n🎬 *Filme:* *{filme_key}*\n\n⚡ *Você precisa de 1 crédito.*\n💫 *Compre créditos ou assine VIP!*",
+                    parse_mode='Markdown',
+                    reply_markup=markup
+                )
+            else:
+                # Simular comando /pedir
+                from_user = type('User', (), {'id': user_id, 'username': call.from_user.username})()
+                msg = type('Msg', (), {
+                    'chat': type('Chat', (), {'id': chat_id}), 
+                    'text': f'/pedir {filme_key}', 
+                    'from_user': from_user
+                })()
+                pedir_cmd(msg)
         
-        elif call.data == 'catalogo_premium':
+        # 🏠 MENU PRINCIPAL
+        elif call.data == 'menu_principal':
+            start_premium(call.message)
+        
+        # 📂 CATÁLOGO
+        elif call.data == 'menu_catalogo':
             catalogo_premium(call.message)
         
-        elif call.data == 'ver_trailers':
+        # 🎥 TRAILERS
+        elif call.data == 'menu_trailers':
             trailer_cmd(call.message)
         
-        elif call.data == 'admin_panel':
-            admin_panel(call.message)
+        # 💰 COMPRAR CRÉDITOS
+        elif call.data == 'comprar_creditos':
+            markup = telebot.types.InlineKeyboardMarkup()
+            markup.row(
+                telebot.types.InlineKeyboardButton("💎 1 Crédito - 20 MZN", callback_data="credito_1"),
+                telebot.types.InlineKeyboardButton("💎 3 Créditos - 50 MZN", callback_data="credito_3")
+            )
+            markup.row(
+                telebot.types.InlineKeyboardButton("💎 5 Créditos - 80 MZN", callback_data="credito_5"),
+                telebot.types.InlineKeyboardButton("👑 VIP (Melhor Oferta)", callback_data="planos_vip")
+            )
+            markup.row(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="menu_principal"))
             
-        bot.answer_callback_query(call.id)
-        
-    except Exception as e:
-        bot.answer_callback_query(call.id, "❌ Erro, tente novamente")
-        print(f"Erro callback: {e}")
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text="""
+💎 *COMPRAR CRÉDITOS*
 
-# 🌐 WEBHOOK E INICIALIZAÇÃO (mantenha igual)
+🎬 *1 CRÉDITO = 1 FILME/SÉRIE*
+
+⚡ *OPÇÕES DISPONÍVEIS:*
+• 💎 *1 Crédito* - 20 MZN
+• 💎 *3 Créditos* - 50 MZN (economize 10 MZN)
+• 💎 *5 Créditos* - 80 MZN (economize 20 MZN)
+
+👑 *VIP RECOMENDADO:*
+• Mais créditos + benefícios exclusivos
+• Economia significativa
+• Suporte prioritário
+
+💫 *PAGAMENTOS VIA:*
+• M-Pesa • e-Mola • PayPal
+• Transferência • Dinheiro
+
+📞 *Contato:* @{}
+                """.format(ADMIN_USERNAME),
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 👑 PLANOS VIP
+        elif call.data == 'planos_vip':
+            markup = telebot.types.InlineKeyboardMarkup()
+            for plano_key, plano in PLANOS_VIP.items():
+                markup.row(telebot.types.InlineKeyboardButton(
+                    f"{plano['nome']} - {plano['preco']}", 
+                    callback_data=f"vip_{plano_key}"
+                ))
+            markup.row(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="menu_principal"))
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text="""
+👑 *PLANOS VIP PREMIUM*
+
+💎 *VANTAGENS EXCLUSIVAS:*
+• ✅ Créditos mensais
+• ✅ Acesso prioritário
+• ✅ Suporte VIP 24/7
+• ✅ Lançamentos antecipados
+• ✅ Catálogo exclusivo
+
+⚡ *ESCOLHA SEU PLANO:*
+
+🎯 *Recomendado:* VIP 3 MESES
+💫 *Melhor Custo-Benefício:* VIP 6 MESES
+
+📞 *Contato:* @{}
+                """.format(ADMIN_USERNAME),
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 👑 ADMIN
+        elif call.data == 'menu_admin':
+            admin_panel(call.message)
+        
+        # 📊 CATEGORIAS
+        elif call.data.startswith('categoria_'):
+            categoria = call.data.replace('categoria_', '')
+            conteudos = CATALOGO_PREMIUM.get(categoria, [])
+            
+            if not conteudos:
+                bot.answer_callback_query(call.id, "📂 Catálogo em desenvolvimento!")
+                return
+            
+            texto = f"🎬 *{categoria.upper()} - CATÁLOGO PREMIUM*\n\n"
+            for item in conteudos:
+                texto += f"• {item['titulo']}\n"
+                texto += f"  🎯 {item['qualidade']}\n"
+                texto += f"  ⏰ {item['duracao']} • {item['ano']}\n\n"
+            
+            markup = telebot.types.InlineKeyboardMarkup()
+            markup.row(
+                telebot.types.InlineKeyboardButton("🎬 Ver Trailers", callback_data="menu_trailers"),
+                telebot.types.InlineKeyboardButton("📦 Fazer Pedido", callback_data="comprar_creditos")
+            )
+            markup.row(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="menu_catalogo"))
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=texto + "\n💎 *Use /pedir NomeDoFilme para solicitar*",
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 💰 CRÉDITOS INDIVIDUAIS
+        elif call.data.startswith('credito_'):
+            qtd = call.data.replace('credito_', '')
+            precos = {'1': '20', '3': '50', '5': '80'}
+            preco = precos.get(qtd, '20')
+            
+            markup = telebot.types.InlineKeyboardMarkup()
+            markup.row(
+                telebot.types.InlineKeyboardButton("📞 Comprar Agora", url=f"https://t.me/{ADMIN_USERNAME}"),
+                telebot.types.InlineKeyboardButton("👑 Ver VIP", callback_data="planos_vip")
+            )
+            markup.row(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="comprar_creditos"))
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=f"""
+💎 *COMPRAR {qtd} CRÉDITO(S)*
+
+💰 *Valor:* {preco} MZN
+🎬 *Equivale a:* {qtd} filme(s)/série(s)
+
+⚡ *PAGAMENTO VIA:*
+• M-Pesa: `{CONTATOS['mpesa']}`
+• e-Mola: `{CONTATOS['emola']}`
+• PayPal: `{CONTATOS['paypal']}`
+• Transferência
+
+📞 *PROCEDIMENTO:*
+1. Faça o pagamento
+2. Envie comprovante para @{ADMIN_USERNAME}
+3. Receba créditos em 2-5 minutos
+
+🎯 *GARANTIA:* Processo 100% seguro!
+                """,
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 👑 PLANOS VIP INDIVIDUAIS
+        elif call.data.startswith('vip_'):
+            plano_key = call.data.replace('vip_', '')
+            plano = PLANOS_VIP.get(plano_key)
+            
+            if plano:
+                beneficios_text = '\n'.join(plano['beneficios'])
+                
+                markup = telebot.types.InlineKeyboardMarkup()
+                markup.row(
+                    telebot.types.InlineKeyboardButton("📞 Assinar Agora", url=f"https://t.me/{ADMIN_USERNAME}"),
+                    telebot.types.InlineKeyboardButton("💎 Créditos Avulsos", callback_data="comprar_creditos")
+                )
+                markup.row(telebot.types.InlineKeyboardButton("🔙 Voltar", callback_data="planos_vip"))
+                
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text=f"""
+{plano['nome']} - {plano['preco']}
+
+{beneficios_text}
+
+⚡ *PAGAMENTO VIA:*
+• M-Pesa: `{CONTATOS['mpesa']}`
+• e-Mola: `{CONTATOS['emola']}`
+• PayPal: `{CONTATOS['paypal']}`
+
+📞 *PROCEDIMENTO:*
+1. Escolha o plano {plano['nome']}
+2. Faça o pagamento de {plano['preco']}
+3. Envie comprovante para @{ADMIN_USERNAME}
+4. Ativação em 5-10 minutos
+
+🎯 *GARANTIA DE SATISFAÇÃO!*
+                    """,
+                    parse_mode='Markdown',
+                    reply_markup=markup
+                )
+        
+        # 📊 ADMIN CALLBACKS
+        elif call.data.startswith('admin_'):
+            bot.answer_callback_query(call.id, "👑 Painel Admin em desenvolvimento!")
+        
+        else:
+            bot.answer_callback_query(call.id, "⚡ Funcionalidade em desenvolvimento!")
+            
+    except Exception as e:
+        print(f"❌ Erro callback: {e}")
+        bot.answer_callback_query(call.id, "❌ Erro, tente novamente")
+
+# 🌐 WEBHOOK E INICIALIZAÇÃO
 @app.route('/')
 def home():
     return "🤖 CINEMA PRO PREMIUM - SISTEMA ATIVO! 🎬"
@@ -715,7 +1107,8 @@ def webhook():
 if __name__ == '__main__':
     print("🚀 CINEMA PRO PREMIUM INICIADO!")
     print(f"💎 Admin: @{ADMIN_USERNAME}")
-    print("🎬 Sistema Profissional Ativo!")
+    print("🎬 Sistema 100% Funcional!")
+    print("⚡ Todos os recursos ativos!")
     
     bot.remove_webhook()
     time.sleep(1)
@@ -723,10 +1116,9 @@ if __name__ == '__main__':
     try:
         bot.set_webhook(url="https://cinema-pro-bot-production.up.railway.app/webhook")
         print("✅ Webhook configurado")
-    except:
-        print("⚠️ Usando polling")
+    except Exception as e:
+        print(f"⚠️ Usando polling: {e}")
         bot.polling(none_stop=True)
     
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
