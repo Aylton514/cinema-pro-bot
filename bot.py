@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 # 🔐 CONFIGURAÇÃO
 TOKEN = "8306714275:AAGzNXE3TZKbe5-49YGTgNOMrJiLVxBjmLA"
 ADMIN_USERNAME = "ayltonanna7"
-ADMIN_ID = 1763118948  # Atualize com seu ID
+ADMIN_ID =5125563829   # Atualize com seu ID
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
@@ -729,3 +729,4 @@ if __name__ == '__main__':
     
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
