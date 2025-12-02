@@ -17,9 +17,9 @@ from decimal import Decimal
 
 # ================= CONFIGURAÇÃO =================
 TOKEN = "8306714275:AAGzNXE3TZKbe5-49YGTgNOMrJiLVxBjmLA"
-ADMIN_ID = 870612404  # Seu ID do Telegram
+ADMIN_ID = 5125563829  # 
 ADMIN_USERNAME = '@ayltonanna7'
-BOT_USERNAME = '@BetMasterProBot'
+BOT_USERNAME = '@cinetobot'
 
 # Preços dos planos VIP (em MT)
 PRECOS = {
@@ -840,3 +840,4 @@ if __name__ == '__main__':
         print(f"❌ Erro: {e}")
     finally:
         conn.close()
+
