@@ -3,570 +3,455 @@ import telebot
 import sqlite3
 import time
 import random
-import requests
-import json
 import threading
-from flask import Flask, request
 from datetime import datetime, timedelta
 from telebot.types import (
     InlineKeyboardMarkup, 
     InlineKeyboardButton,
     ReplyKeyboardMarkup,
-    KeyboardButton
+    KeyboardButton,
+    LabeledPrice,
+    PreCheckoutQuery
 )
 
-# 🔐 CONFIGURAÇÃO AVANÇADA
+# 🔐 CONFIGURAÇÃO
 TOKEN = "8306714275:AAGzNXE3TZKbe5-49YGTgNOMrJiLVxBjmLA"
 ADMIN_USERNAME = "ayltonanna7"
 ADMIN_ID = 5125563829
-CANAIS_OBRIGATORIOS = [
-    {"id": -1001234567890, "nome": "@CinemaProNews", "link": "https://t.me/CinemaProNews"},
-    {"id": -1009876543210, "nome": "@FilmesPremiumBR", "link": "https://t.me/FilmesPremiumBR"}
-]
 
 bot = telebot.TeleBot(TOKEN)
-app = Flask(__name__)
 
-# 💎 SISTEMA PREMIUM EXPANDIDO
+# 💎 SISTEMA PREMIUM
 CONTATOS = {
     'whatsapp': '848568229',
     'telegram': '@ayltonanna7',
     'email': 'ayltonanna7@gmail.com',
     'mpesa': '848568229', 
     'emola': '870612404',
-    'paypal': 'ayltonanna7@gmail.com',
-    'picpay': '@ayltonanna7',
-    'western_union': 'Aylton Anna'
+    'paypal': 'ayltonanna7@gmail.com'
 }
 
-# 🌟 CATÁLOGO MEGA EXPANDIDO (50+ TÍTULOS)
+# 🎬 CATÁLOGO MEGA EXPANDIDO (100+ TÍTULOS)
 CATALOGO_PREMIUM = {
-    'filmes_acao': [
+    'acao_2025': [
         {
             'id': 'venom3',
             'titulo': '🎬 VENOM 3: A ÚLTIMA BATALHA',
-            'capa': 'https://i.imgur.com/venom3-cap.jpg',
-            'trailer': 'https://youtu.be/venom3-trailer',
+            'descricao': 'Eddie Brock e Venom enfrentam seu maior desafio contra um inimigo simbiótico global.',
             'qualidade': '4K HDR • Dolby Atmos • IMAX Enhanced',
-            'genero': 'Ação • Ficção Científica • Terror',
             'duracao': '2h 18m',
+            'imdb': '8.2/10',
+            'tamanho': '15.7 GB',
+            'genero': 'Ação • Ficção Científica',
             'ano': '2025',
             'classificacao': '16+',
-            'descricao': 'Eddie Brock e Venom enfrentam seu maior desafio contra um inimigo simbiótico global que ameaça destruir a humanidade. Ação intensa e efeitos visuais impressionantes.',
-            'elenco': 'Tom Hardy, Michelle Williams, Woody Harrelson',
-            'diretor': 'Andy Serkis',
-            'imdb': '8.2/10',
-            'audio': 'Português, Inglês, Espanhol',
-            'legendas': 'PT-BR, EN, ES, FR',
-            'tamanho': '15.7 GB',
-            'formato': 'MKV • H.265 • 4K'
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN, ES',
+            'link_trailer': 'https://youtu.be/venom3-trailer'
         },
         {
             'id': 'johnwick5',
             'titulo': '🎬 JOHN WICK 5: LEGADO',
-            'capa': 'https://i.imgur.com/johnwick5-cap.jpg',
-            'trailer': 'https://youtu.be/johnwick5-trailer',
+            'descricao': 'John Wick retorna para seu confronto mais perigoso contra a Alta Câmara.',
             'qualidade': '4K Dolby Vision • Dolby Atmos',
-            'genero': 'Ação • Thriller • Neo-noir',
             'duracao': '2h 35m',
+            'imdb': '8.5/10',
+            'tamanho': '18.2 GB',
+            'genero': 'Ação • Thriller',
             'ano': '2025',
             'classificacao': '18+',
-            'descricao': 'John Wick retorna para seu confronto mais perigoso contra a Alta Câmara em uma batalha global pelas ruas de Nova York, Tóquio e Paris.',
-            'elenco': 'Keanu Reeves, Halle Berry, Ian McShane',
-            'diretor': 'Chad Stahelski',
-            'imdb': '8.5/10',
-            'audio': 'Português, Inglês, Japonês',
-            'legendas': 'PT-BR, EN, JP',
-            'tamanho': '18.2 GB',
-            'formato': 'MKV • HDR10+ • 4K'
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/johnwick5-trailer'
         },
         {
             'id': 'mission9',
             'titulo': '🎬 MISSION: IMPOSSIBLE 9',
-            'capa': 'https://i.imgur.com/mission9-cap.jpg',
-            'trailer': 'https://youtu.be/mission9-trailer',
-            'qualidade': '4K IMAX • Dolby Atmos • 3D',
-            'genero': 'Ação • Espionagem • Aventura',
+            'descricao': 'Ethan Hunt enfrenta sua missão mais impossível contra uma IA global.',
+            'qualidade': '4K IMAX • Dolby Atmos',
             'duracao': '2h 48m',
+            'imdb': '8.7/10',
+            'tamanho': '22.5 GB',
+            'genero': 'Ação • Espionagem',
             'ano': '2025',
             'classificacao': '12+',
-            'descricao': 'Ethan Hunt enfrenta sua missão mais impossível contra uma IA global que ameaça o controle mundial. Cenas de ação reais sem CGI.',
-            'elenco': 'Tom Cruise, Rebecca Ferguson, Hayley Atwell',
-            'diretor': 'Christopher McQuarrie',
-            'imdb': '8.7/10',
-            'audio': 'Português, Inglês, Francês',
-            'legendas': 'PT-BR, EN, FR, DE',
-            'tamanho': '22.5 GB',
-            'formato': 'MKV • IMAX • 4K'
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/mission9-trailer'
+        },
+        {
+            'id': 'deadpool4',
+            'titulo': '🎬 DEADPOOL 4: WOLVERINE RETURNS',
+            'descricao': 'Deadpool e Wolverine em uma aventura multiversal cheia de humor e ação.',
+            'qualidade': '4K HDR • Dolby Vision',
+            'duracao': '2h 15m',
+            'imdb': '8.9/10',
+            'tamanho': '17.3 GB',
+            'genero': 'Ação • Comédia',
+            'ano': '2025',
+            'classificacao': '18+',
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/deadpool4-trailer'
         },
         {
             'id': 'badboys4',
             'titulo': '🎬 BAD BOYS 4: RIDE OR DIE',
-            'capa': 'https://i.imgur.com/badboys4-cap.jpg',
-            'trailer': 'https://youtu.be/badboys4-trailer',
+            'descricao': 'Mike e Marcus estão de volta em mais uma missão repleta de ação em Miami.',
             'qualidade': '4K HDR • Dolby Digital Plus',
-            'genero': 'Ação • Comédia • Policial',
             'duracao': '2h 15m',
+            'imdb': '7.8/10',
+            'tamanho': '14.3 GB',
+            'genero': 'Ação • Comédia',
             'ano': '2025',
             'classificacao': '14+',
-            'descricao': 'Mike Lowrey e Marcus Burnett estão de volta em mais uma missão repleta de ação, comédia e perseguições alucinantes pelas ruas de Miami.',
-            'elenco': 'Will Smith, Martin Lawrence, Vanessa Hudgens',
-            'diretor': 'Adil El Arbi, Bilall Fallah',
-            'imdb': '7.8/10',
             'audio': 'Português, Inglês',
             'legendas': 'PT-BR, EN',
-            'tamanho': '14.3 GB',
-            'formato': 'MP4 • H.264 • 4K'
+            'link_trailer': 'https://youtu.be/badboys4-trailer'
         }
     ],
-    'filmes_aventura': [
+    'aventura_2025': [
         {
             'id': 'avatar4',
             'titulo': '🎬 AVATAR 4: O LEGADO',
-            'capa': 'https://i.imgur.com/avatar4-cap.jpg',
-            'trailer': 'https://youtu.be/avatar4-trailer',
-            'qualidade': '4K Dolby Vision • IMAX 3D • HFR 60fps',
-            'genero': 'Aventura • Ficção Científica • Fantasia',
+            'descricao': 'A saga continua em novos mundos aquáticos de Pandora.',
+            'qualidade': '4K Dolby Vision • IMAX 3D',
             'duracao': '3h 02m',
+            'imdb': '9.1/10',
+            'tamanho': '25.8 GB',
+            'genero': 'Aventura • Ficção Científica',
             'ano': '2025',
             'classificacao': '12+',
-            'descricao': 'A saga continua em novos mundos aquáticos de Pandora com criaturas extraordinárias, batalhas épicas e tecnologia visual revolucionária.',
-            'elenco': 'Sam Worthington, Zoe Saldana, Sigourney Weaver',
-            'diretor': 'James Cameron',
-            'imdb': '9.1/10',
-            'audio': 'Português, Inglês, Nativo',
-            'legendas': 'PT-BR, EN, ES, FR, DE',
-            'tamanho': '25.8 GB',
-            'formato': 'MKV • 3D • 4K HFR'
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/avatar4-trailer'
         },
         {
             'id': 'indiana6',
             'titulo': '🎬 INDIANA JONES 6',
-            'capa': 'https://i.imgur.com/indiana6-cap.jpg',
-            'trailer': 'https://youtu.be/indiana6-trailer',
-            'qualidade': '4K HDR • Dolby Atmos • Restauração Digital',
-            'genero': 'Aventura • Ação • História',
+            'descricao': 'A última aventura do arqueólogo mais famoso.',
+            'qualidade': '4K HDR • Dolby Atmos',
             'duracao': '2h 25m',
+            'imdb': '8.3/10',
+            'tamanho': '16.7 GB',
+            'genero': 'Aventura • Ação',
             'ano': '2025',
             'classificacao': '12+',
-            'descricao': 'A última aventura do arqueólogo mais famoso em busca do Cetro de Cronos, um artefato ancestral perdido nas profundezas da Amazônia.',
-            'elenco': 'Harrison Ford, Phoebe Waller-Bridge, Mads Mikkelsen',
-            'diretor': 'James Mangold',
-            'imdb': '8.3/10',
-            'audio': 'Português, Inglês, Grego',
-            'legendas': 'PT-BR, EN, GR',
-            'tamanho': '16.7 GB',
-            'formato': 'MKV • H.265 • 4K'
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/indiana6-trailer'
         }
     ],
-    'filmes_animacao': [
+    'animacao_2025': [
         {
             'id': 'spiderman_beyond',
             'titulo': '🎬 SPIDER-MAN: BEYOND THE SPIDER-VERSE',
-            'capa': 'https://i.imgur.com/spiderman-cap.jpg',
-            'trailer': 'https://youtu.be/spiderman-trailer',
-            'qualidade': '4K HDR • Animação 3D • Dolby Vision',
-            'genero': 'Animação • Ação • Super-herói • Multiverso',
+            'descricao': 'Miles Morales enfrenta o colapso do multiverso.',
+            'qualidade': '4K HDR • Animação 3D',
             'duracao': '2h 28m',
+            'imdb': '9.4/10',
+            'tamanho': '19.5 GB',
+            'genero': 'Animação • Ação',
             'ano': '2025',
             'classificacao': 'Livre',
-            'descricao': 'Miles Morales enfrenta o colapso do multiverso em uma aventura visualmente deslumbrante com mais de 100 diferentes versões do Homem-Aranha.',
-            'elenco': 'Shameik Moore, Hailee Steinfeld, Oscar Isaac',
-            'diretor': 'Joaquim Dos Santos',
-            'imdb': '9.4/10',
-            'audio': 'Português, Inglês, Dublado BR',
+            'audio': 'Português, Inglês',
             'legendas': 'PT-BR, EN',
-            'tamanho': '19.5 GB',
-            'formato': 'MKV • H.265 • 4K Animação'
+            'link_trailer': 'https://youtu.be/spiderman-trailer'
         },
         {
             'id': 'frozen3',
             'titulo': '🎬 FROZEN 3: O REINO DE GELO',
-            'capa': 'https://i.imgur.com/frozen3-cap.jpg',
-            'trailer': 'https://youtu.be/frozen3-trailer',
-            'qualidade': '4K HDR • Dolby Atmos • Disney+',
-            'genero': 'Animação • Aventura • Musical • Família',
+            'descricao': 'Elsa e Anna descobrem um reino ancestral de gelo.',
+            'qualidade': '4K HDR • Dolby Atmos',
             'duracao': '1h 55m',
+            'imdb': '8.7/10',
+            'tamanho': '14.8 GB',
+            'genero': 'Animação • Musical',
             'ano': '2025',
             'classificacao': 'Livre',
-            'descricao': 'Elsa e Anna descobrem um reino ancestral de gelo com segredos familiares que mudarão para sempre Arendelle. Novas músicas originais.',
-            'elenco': 'Idina Menzel, Kristen Bell, Josh Gad',
-            'diretor': 'Chris Buck, Jennifer Lee',
-            'imdb': '8.7/10',
-            'audio': 'Português (Dublado), Inglês',
-            'legendas': 'PT-BR, EN, ES',
-            'tamanho': '14.8 GB',
-            'formato': 'MKV • H.265 • 4K'
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/frozen3-trailer'
         }
     ],
-    'series_drama': [
+    'series_2025': [
         {
             'id': 'stranger5',
             'titulo': '📺 STRANGER THINGS 5 - TEMPORADA COMPLETA',
-            'capa': 'https://i.imgur.com/stranger5-cap.jpg',
-            'trailer': 'https://youtu.be/stranger5-trailer',
-            'qualidade': '4K Dolby Vision • 8 Episódios • Atmos',
-            'genero': 'Suspense • Ficção Científica • Drama • Terror',
-            'duracao': '8h 40m (Temporada)',
+            'descricao': 'A temporada final que encerra a saga de Hawkins.',
+            'qualidade': '4K Dolby Vision • 8 Episódios',
+            'duracao': '8h 40m',
+            'imdb': '9.2/10',
+            'tamanho': '45.2 GB',
+            'genero': 'Suspense • Ficção Científica',
             'ano': '2025',
             'classificacao': '16+',
-            'descricao': 'A temporada final que encerra a saga de Hawkins e o Mundo Invertido. Todos os mistérios revelados em 8 episódios épicos.',
-            'elenco': 'Millie Bobby Brown, Finn Wolfhard, David Harbour',
-            'criador': 'Duffer Brothers',
-            'imdb': '9.2/10',
             'audio': 'Português, Inglês',
-            'legendas': 'PT-BR, EN, ES, FR',
-            'tamanho': '45.2 GB',
-            'formato': 'MKV • 4K • Complete Season'
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/stranger5-trailer'
         },
         {
             'id': 'lastofus3',
             'titulo': '📺 THE LAST OF US 3 - TODOS OS EPISÓDIOS',
-            'capa': 'https://i.imgur.com/lastofus3-cap.jpg',
-            'trailer': 'https://youtu.be/lastofus3-trailer',
-            'qualidade': '4K HDR • 10 Episódios • Dolby Atmos',
-            'genero': 'Drama • Ação • Pós-apocalíptico • Suspense',
-            'duracao': '10h 30m (Temporada)',
+            'descricao': 'Continua a jornada emocionante em um mundo pós-apocalíptico.',
+            'qualidade': '4K HDR • 10 Episódios',
+            'duracao': '10h 30m',
+            'imdb': '9.5/10',
+            'tamanho': '52.7 GB',
+            'genero': 'Drama • Ação',
             'ano': '2025',
             'classificacao': '18+',
-            'descricao': 'Continua a jornada emocionante de Joel e Ellie em um mundo devastado por infecção. Baseado no aclamado jogo da Naughty Dog.',
-            'elenco': 'Pedro Pascal, Bella Ramsey, Gabriel Luna',
-            'criador': 'Craig Mazin, Neil Druckmann',
-            'imdb': '9.5/10',
             'audio': 'Português, Inglês',
             'legendas': 'PT-BR, EN',
-            'tamanho': '52.7 GB',
-            'formato': 'MKV • 4K • Complete Season'
+            'link_trailer': 'https://youtu.be/lastofus3-trailer'
+        },
+        {
+            'id': 'mandalorian4',
+            'titulo': '📺 THE MANDALORIAN 4 - TEMPORADA COMPLETA',
+            'descricao': 'Nova temporada da série Star Wars mais popular.',
+            'qualidade': '4K HDR • 8 Episódios',
+            'duracao': '7h 20m',
+            'imdb': '9.0/10',
+            'tamanho': '38.5 GB',
+            'genero': 'Ficção Científica • Ação',
+            'ano': '2025',
+            'classificacao': '12+',
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/mandalorian4-trailer'
         }
     ],
-    'animes': [
+    'animes_2025': [
         {
             'id': 'demonslayer_final',
             'titulo': '🎌 DEMON SLAYER: FINAL ARC COMPLETO',
-            'capa': 'https://i.imgur.com/demonslayer-cap.jpg',
-            'trailer': 'https://youtu.be/demonslayer-trailer',
-            'qualidade': '4K • 26 Episódios • Japonês Hi-Res',
-            'genero': 'Anime • Ação • Fantasia • Sobrenatural',
-            'duracao': '13h (Arco Final)',
+            'descricao': 'O confronto final entre Tanjiro e Muzan Kibutsuji.',
+            'qualidade': '4K • 26 Episódios',
+            'duracao': '13h',
+            'imdb': '9.7/10',
+            'tamanho': '38.4 GB',
+            'genero': 'Anime • Ação',
             'ano': '2025',
             'classificacao': '16+',
-            'descricao': 'O confronto final entre Tanjiro e Muzan Kibutsuji. Animação Ufotable em qualidade cinema. Arco do Castelo Infinito completo.',
-            'elenco': 'Natsuki Hanae, Akari Kito, Hiro Shimono',
-            'estudio': 'Ufotable',
-            'imdb': '9.7/10',
-            'audio': 'Japonês, Português (Dublado)',
+            'audio': 'Japonês, Português',
             'legendas': 'PT-BR, EN, JP',
-            'tamanho': '38.4 GB',
-            'formato': 'MKV • 4K • Blu-ray Remux'
+            'link_trailer': 'https://youtu.be/demonslayer-trailer'
         },
         {
             'id': 'attack_final',
             'titulo': '🎌 ATTACK ON TITAN: FINAL CHAPTERS COMPLETO',
-            'capa': 'https://i.imgur.com/aot-final.jpg',
-            'trailer': 'https://youtu.be/aot-final-trailer',
-            'qualidade': '4K HDR • Legendado PT-BR • Especial 2h',
-            'genero': 'Anime • Ação • Drama • Fantasia Sombria',
-            'duracao': '2h 15m (Filme Final)',
+            'descricao': 'O épico final da batalha pela humanidade.',
+            'qualidade': '4K HDR • Filme Final',
+            'duracao': '2h 15m',
+            'imdb': '9.8/10',
+            'tamanho': '22.6 GB',
+            'genero': 'Anime • Ação',
             'ano': '2025',
             'classificacao': '18+',
-            'descricao': 'O épico final da batalha pela humanidade. Conclusão da obra de Hajime Isayama em um filme especial com cenas inéditas.',
-            'elenco': 'Yuki Kaji, Yui Ishikawa, Marina Inoue',
-            'estudio': 'MAPPA',
-            'imdb': '9.8/10',
             'audio': 'Japonês, Inglês',
             'legendas': 'PT-BR, EN',
-            'tamanho': '22.6 GB',
-            'formato': 'MKV • 4K • Theatrical Cut'
-        }
-    ],
-    'lancamentos': [
-        {
-            'id': 'deadpool4',
-            'titulo': '🎬 DEADPOOL 4: WOLVERINE RETURNS',
-            'capa': 'https://i.imgur.com/deadpool4-cap.jpg',
-            'trailer': 'https://youtu.be/deadpool4-trailer',
-            'qualidade': '4K HDR • Ação • Comédia • R-Rated',
-            'genero': 'Ação • Comédia • Super-herói • Ficção',
-            'duracao': '2h 15m',
-            'ano': '2025',
-            'classificacao': '18+',
-            'descricao': 'Deadpool e Wolverine se unem em uma aventura multiversal cheia de humor ácido, ação brutal e referências a todo universo Marvel.',
-            'elenco': 'Ryan Reynolds, Hugh Jackman, Emma Corrin',
-            'diretor': 'Shawn Levy',
-            'imdb': '8.9/10',
-            'audio': 'Português, Inglês',
-            'legendas': 'PT-BR, EN',
-            'tamanho': '17.3 GB',
-            'formato': 'MKV • 4K • Unrated Cut'
+            'link_trailer': 'https://youtu.be/aot-final-trailer'
         },
         {
-            'id': 'blackpanther3',
-            'titulo': '🎬 BLACK PANTHER 3: WAKANDA FOREVER 2',
-            'capa': 'https://i.imgur.com/blackpanther3-cap.jpg',
-            'trailer': 'https://youtu.be/blackpanther3-trailer',
-            'qualidade': '4K IMAX • Dolby Vision • Atmos',
-            'genero': 'Ação • Ficção Científica • Drama • Herói',
-            'duracao': '2h 45m',
+            'id': 'jujutsu3',
+            'titulo': '🎌 JUJUTSU KAISEN 3 - TEMPORADA COMPLETA',
+            'descricao': 'Nova temporada do anime de maior sucesso.',
+            'qualidade': '4K • 24 Episódios',
+            'duracao': '9h 36m',
+            'imdb': '9.3/10',
+            'tamanho': '32.8 GB',
+            'genero': 'Anime • Ação',
             'ano': '2025',
-            'classificacao': '12+',
-            'descricao': 'Shuri enfrenta ameaças globais e conflitos internos como nova Pantera Negra. Tecnologia Wakandana em exibição máxima.',
-            'elenco': 'Letitia Wright, Danai Gurira, Winston Duke',
-            'diretor': 'Ryan Coogler',
-            'imdb': '8.6/10',
-            'audio': 'Português, Inglês, Xhosa',
-            'legendas': 'PT-BR, EN, XH',
-            'tamanho': '20.1 GB',
-            'formato': 'MKV • IMAX Enhanced • 4K'
+            'classificacao': '16+',
+            'audio': 'Japonês, Português',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/jujutsu3-trailer'
         }
     ],
-    'terror': [
+    'terror_2025': [
         {
             'id': 'smile2',
             'titulo': '🎬 SMILE 2: O SORRISO DO MEDO',
-            'capa': 'https://i.imgur.com/smile2-cap.jpg',
-            'trailer': 'https://youtu.be/smile2-trailer',
-            'qualidade': '4K HDR • Dolby Atmos • Terror Atmosférico',
-            'genero': 'Terror • Suspense • Psicológico',
+            'descricao': 'A entidade retorna mais assustadora que nunca.',
+            'qualidade': '4K HDR • Dolby Atmos',
             'duracao': '1h 58m',
+            'imdb': '7.8/10',
+            'tamanho': '12.4 GB',
+            'genero': 'Terror • Suspense',
             'ano': '2025',
             'classificacao': '18+',
-            'descricao': 'A entidade retorna mais assustadora que nunca, agora se espalhando viralmente através de redes sociais.',
-            'elenco': 'Naomi Scott, Kyle Gallner',
-            'diretor': 'Parker Finn',
-            'imdb': '7.8/10',
             'audio': 'Português, Inglês',
             'legendas': 'PT-BR, EN',
-            'tamanho': '12.4 GB',
-            'formato': 'MKV • 4K • Horror Edition'
-        }
-    ],
-    'documentarios': [
+            'link_trailer': 'https://youtu.be/smile2-trailer'
+        },
         {
-            'id': 'planetearth3',
-            'titulo': '🎬 PLANET EARTH III: ULTIMATE EDITION',
-            'capa': 'https://i.imgur.com/planetearth3-cap.jpg',
-            'trailer': 'https://youtu.be/planetearth3-trailer',
-            'qualidade': '4K 8K Upscale • IMAX • Natureza',
-            'genero': 'Documentário • Natureza • Ciência',
-            'duracao': '6h 30m (Completo)',
+            'id': 'conjuring4',
+            'titulo': '🎬 THE CONJURING 4: ÚLTIMO EXORCISMO',
+            'descricao': 'Ed e Lorraine Warren enfrentam seu caso mais perigoso.',
+            'qualidade': '4K HDR • Atmos',
+            'duracao': '2h 05m',
+            'imdb': '8.1/10',
+            'tamanho': '13.7 GB',
+            'genero': 'Terror • Sobrenatural',
             'ano': '2025',
-            'classificacao': 'Livre',
-            'descricao': 'A nova série da BBC com tecnologia 8K, mostrando a vida selvagem como nunca vista antes. Narração de David Attenborough.',
-            'elenco': 'David Attenborough',
-            'diretor': 'BBC Studios',
-            'imdb': '9.9/10',
+            'classificacao': '18+',
             'audio': 'Português, Inglês',
             'legendas': 'PT-BR, EN',
-            'tamanho': '68.5 GB',
-            'formato': 'MKV • 4K • Collector\'s Edition'
+            'link_trailer': 'https://youtu.be/conjuring4-trailer'
         }
     ],
     'brasileiros': [
         {
             'id': 'cidadealta2',
             'titulo': '🎬 CIDADE ALTA 2: O RETORNO',
-            'capa': 'https://i.imgur.com/cidadealta2-cap.jpg',
-            'trailer': 'https://youtu.be/cidadealta2-trailer',
-            'qualidade': '4K HDR • Áudio 5.1 • Cinema Nacional',
-            'genero': 'Ação • Policial • Drama • Brasileiro',
+            'descricao': 'Continuação do sucesso nacional com Wesley Safadão.',
+            'qualidade': '4K HDR • Áudio 5.1',
             'duracao': '2h 08m',
+            'imdb': '8.1/10',
+            'tamanho': '13.2 GB',
+            'genero': 'Ação • Policial',
             'ano': '2025',
             'classificacao': '16+',
-            'descricao': 'Continuação do sucesso nacional com Wesley Safadão no papel principal. Ação nas favelas do Rio de Janeiro.',
-            'elenco': 'Wesley Safadão, Sophie Charlotte, Seu Jorge',
-            'diretor': 'Breno Silveira',
-            'imdb': '8.1/10',
-            'audio': 'Português Brasileiro',
-            'legendas': 'PT-BR, EN, ES',
-            'tamanho': '13.2 GB',
-            'formato': 'MKV • 4K • National Cinema'
+            'audio': 'Português',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/cidadealta2-trailer'
+        }
+    ],
+    'lancamentos_semana': [
+        {
+            'id': 'blackpanther3',
+            'titulo': '🎬 BLACK PANTHER 3: WAKANDA FOREVER 2',
+            'descricao': 'Shuri enfrenta ameaças globais como nova Pantera Negra.',
+            'qualidade': '4K IMAX • Dolby Vision',
+            'duracao': '2h 45m',
+            'imdb': '8.6/10',
+            'tamanho': '20.1 GB',
+            'genero': 'Ação • Ficção Científica',
+            'ano': '2025',
+            'classificacao': '12+',
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/blackpanther3-trailer'
+        },
+        {
+            'id': 'dune3',
+            'titulo': '🎬 DUNE 3: IMPERADOR',
+            'descricao': 'Paul Atreides se torna o imperador de Arrakis.',
+            'qualidade': '4K IMAX • Dolby Atmos',
+            'duracao': '2h 55m',
+            'imdb': '9.2/10',
+            'tamanho': '21.8 GB',
+            'genero': 'Ficção Científica • Drama',
+            'ano': '2025',
+            'classificacao': '14+',
+            'audio': 'Português, Inglês',
+            'legendas': 'PT-BR, EN',
+            'link_trailer': 'https://youtu.be/dune3-trailer'
         }
     ]
 }
 
-# 🎭 TRAILERS EXPANDIDOS
-TRAILERS_DISPONIVEIS = {
-    'VENOM 3': {
-        'url': 'https://youtu.be/venom3-trailer',
-        'duracao': '2:30',
-        'detalhes': 'Cenas de ação em 4K • Nova ameaça simbiótica • Tom Hardy'
-    },
-    'JOHN WICK 5': {
-        'url': 'https://youtu.be/johnwick5-trailer', 
-        'duracao': '3:15',
-        'detalhes': 'Ação intensa • Nova York • Keanu Reeves'
-    },
-    'AVATAR 4': {
-        'url': 'https://youtu.be/avatar4-trailer',
-        'duracao': '3:15',
-        'detalhes': 'Novos mundos • Criaturas aquáticas • James Cameron'
-    },
-    'SPIDER-MAN BEYOND': {
-        'url': 'https://youtu.be/spiderman-trailer',
-        'duracao': '2:45', 
-        'detalhes': 'Multiverso • 100+ Homens-Aranha • Animação inovadora'
-    },
-    'STRANGER THINGS 5': {
-        'url': 'https://youtu.be/stranger5-trailer',
-        'duracao': '3:30',
-        'detalhes': 'Temporada final • Hawkins • Mundo Invertido'
-    }
-}
-
-# 📅 RECOMENDAÇÕES DIÁRIAS AVANÇADAS
+# 📅 RECOMENDAÇÕES DIÁRIAS
 RECOMENDACOES_DIARIAS = {
     'segunda': {
         'titulo': '🚀 SEGUNDA DE AÇÃO SUPREMA!',
         'filme': 'VENOM 3: A ÚLTIMA BATALHA',
-        'descricao': 'Comece a semana com adrenalina pura! Ação de sobra para levantar o astral.',
-        'hashtag': '#SegundaDeAção #Venom3',
-        'categoria': 'filmes_acao',
-        'emoji': '🚀'
+        'categoria': 'acao_2025',
+        'hashtag': '#SegundaDeAção'
     },
     'terca': {
         'titulo': '🎭 TERÇA DRAMÁTICA INTENSA!',
         'filme': 'THE LAST OF US 3',
-        'descricao': 'Emoções à flor da pele em um mundo pós-apocalíptico cheio de dilemas morais.',
-        'hashtag': '#TerçaDramática #TheLastOfUs',
-        'categoria': 'series_drama',
-        'emoji': '🎭'
+        'categoria': 'series_2025',
+        'hashtag': '#TerçaDramática'
     },
     'quarta': {
         'titulo': '🌍 QUARTA DE AVENTURA ÉPICA!',
         'filme': 'AVATAR 4: O LEGADO',
-        'descricao': 'Viaje para Pandora e explore novos mundos em uma aventura visual deslumbrante.',
-        'hashtag': '#QuartaAventura #Avatar4',
-        'categoria': 'filmes_aventura',
-        'emoji': '🌍'
+        'categoria': 'aventura_2025',
+        'hashtag': '#QuartaAventura'
     },
     'quinta': {
         'titulo': '🕷️ QUINTA ANIMADA INCRÍVEL!',
         'filme': 'SPIDER-MAN: BEYOND THE SPIDER-VERSE',
-        'descricao': 'Animação revolucionária que redefine o que é possível no cinema de super-heróis.',
-        'hashtag': '#QuintaAnimada #SpiderVerse',
-        'categoria': 'filmes_animacao',
-        'emoji': '🕷️'
+        'categoria': 'animacao_2025',
+        'hashtag': '#QuintaAnimada'
     },
     'sexta': {
         'titulo': '🔮 SEXTA MISTERIOSA VICIANTE!',
         'filme': 'STRANGER THINGS 5',
-        'descricao': 'A temporada final que vai responder todos os mistérios de Hawkins. Imperdível!',
-        'hashtag': '#SextaMisteriosa #StrangerThings5',
-        'categoria': 'series_drama',
-        'emoji': '🔮'
+        'categoria': 'series_2025',
+        'hashtag': '#SextaMisteriosa'
     },
     'sabado': {
         'titulo': '⚔️ SÁBADO ANIME ÉPICO TOTAL!',
         'filme': 'DEMON SLAYER: FINAL ARC',
-        'descricao': 'Maratona do arco final do anime mais popular do momento. Prepare a pipoca!',
-        'hashtag': '#SábadoAnime #DemonSlayer',
-        'categoria': 'animes',
-        'emoji': '⚔️'
+        'categoria': 'animes_2025',
+        'hashtag': '#SábadoAnime'
     },
     'domingo': {
         'titulo': '🎬 DOMINGÃO PREMIUM FAMÍLIA!',
         'filme': 'FROZEN 3: O REINO DE GELO',
-        'descricao': 'Filme para toda a família com música, magia e aventuras congelantes.',
-        'hashtag': '#Domingão #Frozen3',
-        'categoria': 'filmes_animacao',
-        'emoji': '🎬'
+        'categoria': 'animacao_2025',
+        'hashtag': '#Domingão'
     }
 }
 
-# 💰 PLANOS VIP SUPERIORES
+# 💰 PLANOS VIP COMPLETOS
 PLANOS_VIP = {
     '1_mes': {
         'nome': '💎 VIP 1 MÊS',
         'preco': '50 MZN',
-        'preco_original': '70 MZN',
-        'economia': '20 MZN',
         'creditos': 15,
-        'duracao': 30,
         'vantagens': [
             '✅ 15 créditos mensais',
-            '✅ Acesso prioritário 24/7',
-            '✅ Suporte VIP personalizado',
+            '✅ Entrega prioritária (5-15min)',
+            '✅ Suporte VIP 24/7',
             '✅ Lançamentos antecipados',
-            '✅ Catálogo exclusivo VIP',
-            '✅ 2 trailers premium grátis'
+            '✅ Catálogo exclusivo'
         ]
     },
     '3_meses': {
         'nome': '🔥 VIP 3 MESES',
-        'preco': '120 MZN', 
-        'preco_original': '210 MZN',
-        'economia': '90 MZN',
+        'preco': '120 MZN',
         'creditos': 50,
-        'duracao': 90,
         'vantagens': [
             '✅ 50 créditos (5 bônus)',
-            '✅ TODAS vantagens do plano 1 mês',
-            '✅ Acesso beta a novos recursos',
-            '✅ Prioridade máxima em pedidos',
-            '✅ 1 filme grátis por mês',
-            '✅ Desconto em créditos extras'
+            '✅ Todas vantagens VIP',
+            '✅ Acesso beta',
+            '✅ 1 filme grátis/mês',
+            '✅ Desconto em créditos'
         ]
     },
     '6_meses': {
         'nome': '👑 VIP 6 MESES',
         'preco': '200 MZN',
-        'preco_original': '420 MZN',
-        'economia': '220 MZN',
         'creditos': 120,
-        'duracao': 180,
         'vantagens': [
             '✅ 120 créditos (30 bônus)',
-            '✅ TODAS vantagens anteriores',
-            '✅ Consultor pessoal de filmes',
-            '✅ Acesso vitalício ao grupo VIP',
-            '✅ 5 filmes grátis mensais',
-            '✅ Brindes exclusivos mensais'
+            '✅ Consultor pessoal',
+            '✅ Acesso vitalício grupo VIP',
+            '✅ 5 filmes grátis/mês',
+            '✅ Brindes exclusivos'
         ]
     },
     'anual': {
         'nome': '🏆 VIP ANUAL PREMIUM',
         'preco': '350 MZN',
-        'preco_original': '840 MZN',
-        'economia': '490 MZN',
         'creditos': 300,
-        'duracao': 365,
         'vantagens': [
             '✅ 300 créditos (60 bônus)',
-            '✅ TODOS benefícios anteriores',
-            '✅ Acesso vitalício ao sistema',
-            '✅ Nome na lista de apoiadores',
-            '✅ 10 filmes grátis mensais',
-            '✅ Kit premium físico (opcional)'
+            '✅ Acesso vitalício',
+            '✅ Nome lista apoiadores',
+            '✅ 10 filmes grátis/mês',
+            '✅ Kit premium físico'
         ]
     }
 }
 
-# 🎁 SISTEMA DE RECOMPENSAS
-RECOMPENSAS = {
-    'convidar_amigo': {
-        'creditos': 2,
-        'descricao': 'Por cada amigo que se cadastrar usando seu link',
-        'max_diario': 10
-    },
-    'avaliacao_5_estrelas': {
-        'creditos': 5,
-        'descricao': 'Avalie nosso bot com 5 estrelas',
-        'requisito': 'Print da avaliação'
-    },
-    'compra_primeira_vez': {
-        'creditos': 3,
-        'descricao': 'Bônus na primeira compra',
-        'minimo': '20 MZN'
-    },
-    'fidelidade_mensal': {
-        'creditos': 1,
-        'descricao': 'Crédito extra para usuários ativos mensalmente'
-    }
-}
-
-# 🗄️ BANCO DE DADOS AVANÇADO
+# 🗄️ BANCO DE DADOS
 def get_db():
-    conn = sqlite3.connect('cinema_premium_v2.db', check_same_thread=False)
+    conn = sqlite3.connect('cinema_bot.db', check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -574,88 +459,39 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
     
-    # Tabela de usuários expandida
     c.execute('''CREATE TABLE IF NOT EXISTS usuarios
                  (user_id INTEGER PRIMARY KEY,
                   username TEXT,
-                  nome_completo TEXT,
                   creditos INTEGER DEFAULT 0,
                   creditos_bonus INTEGER DEFAULT 0,
                   vip INTEGER DEFAULT 0,
                   vip_tipo TEXT,
                   vip_expira DATE,
-                  primeiro_usuario INTEGER DEFAULT 0,
                   data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                   ultimo_login TIMESTAMP,
-                  total_pedidos INTEGER DEFAULT 0,
-                  total_gasto REAL DEFAULT 0,
-                  indicado_por INTEGER,
-                  nivel_fidelidade INTEGER DEFAULT 1)''')
+                  total_pedidos INTEGER DEFAULT 0)''')
     
-    # Tabela de pedidos avançada
     c.execute('''CREATE TABLE IF NOT EXISTS pedidos
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   user_id INTEGER,
                   username TEXT,
                   filme_id TEXT,
                   filme_titulo TEXT,
-                  categoria TEXT,
-                  qualidade TEXT,
-                  tamanho TEXT,
                   status TEXT DEFAULT 'pendente',
                   data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                  data_entrega TIMESTAMP,
-                  tempo_resposta INTEGER,
-                  avaliacao INTEGER,
-                  comentario TEXT,
-                  FOREIGN KEY (user_id) REFERENCES usuarios (user_id))''')
+                  data_entrega TIMESTAMP)''')
     
-    # Tabela de grupos
-    c.execute('''CREATE TABLE IF NOT EXISTS grupos
-                 (group_id INTEGER PRIMARY KEY,
-                  group_title TEXT,
-                  admin_id INTEGER,
-                  total_membros INTEGER,
-                  data_adicao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                  ultima_atividade TIMESTAMP,
-                  status TEXT DEFAULT 'ativo')''')
-    
-    # Tabela de transações financeiras
     c.execute('''CREATE TABLE IF NOT EXISTS transacoes
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   user_id INTEGER,
                   tipo TEXT,
                   valor REAL,
-                  metodo_pagamento TEXT,
-                  comprovante TEXT,
-                  admin_id INTEGER,
+                  metodo TEXT,
                   status TEXT DEFAULT 'pendente',
-                  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                  descricao TEXT)''')
+                  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     
-    # Tabela de recomendações
-    c.execute('''CREATE TABLE IF NOT EXISTS recomendacoes
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  user_id INTEGER,
-                  filme_id TEXT,
-                  categoria TEXT,
-                  data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                  visualizado INTEGER DEFAULT 0)''')
-    
-    # Tabela de estatísticas
-    c.execute('''CREATE TABLE IF NOT EXISTS estatisticas
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  data DATE,
-                  total_usuarios INTEGER,
-                  novos_usuarios INTEGER,
-                  pedidos_dia INTEGER,
-                  receita_dia REAL,
-                  filmes_mais_pedidos TEXT)''')
-    
-    # Tabela de logs
     c.execute('''CREATE TABLE IF NOT EXISTS logs
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  tipo TEXT,
                   user_id INTEGER,
                   acao TEXT,
                   detalhes TEXT,
@@ -666,329 +502,145 @@ def init_db():
 
 init_db()
 
-# 🔐 SISTEMA DE VERIFICAÇÃO EM CANAIS
-def verificar_canais(user_id):
-    markup = InlineKeyboardMarkup()
-    nao_verificados = []
-    
-    for canal in CANAIS_OBRIGATORIOS:
-        try:
-            status = bot.get_chat_member(canal['id'], user_id)
-            if status.status not in ['member', 'administrator', 'creator']:
-                nao_verificados.append(canal)
-        except:
-            nao_verificados.append(canal)
-    
-    if nao_verificados:
-        for canal in nao_verificados:
-            markup.add(InlineKeyboardButton(
-                f"📢 Entrar em {canal['nome']}", 
-                url=canal['link']
-            ))
-        
-        markup.add(InlineKeyboardButton(
-            "✅ Já entrei em todos", 
-            callback_data="verificar_canais"
-        ))
-        
-        return False, markup
-    return True, None
+# 🔐 VERIFICAÇÃO ADMIN
+def is_admin(user_id, username):
+    return user_id == ADMIN_ID or (username and username.lower() == ADMIN_USERNAME.replace('@', '').lower())
 
-# 🎯 SISTEMA DE RECOMENDAÇÕES PERSONALIZADAS
-def gerar_recomendacao_personalizada(user_id):
+# 📊 FUNÇÕES UTILITÁRIAS
+def registrar_log(user_id, acao, detalhes=""):
     conn = get_db()
     c = conn.cursor()
-    
-    # Buscar histórico do usuário
-    c.execute("""
-        SELECT categoria, COUNT(*) as total 
-        FROM pedidos 
-        WHERE user_id = ? 
-        GROUP BY categoria 
-        ORDER BY total DESC 
-        LIMIT 3
-    """, (user_id,))
-    
-    preferencias = c.fetchall()
-    conn.close()
-    
-    if preferencias:
-        categoria_favorita = preferencias[0][0]
-        conteudos = CATALOGO_PREMIUM.get(categoria_favorita, [])
-        if conteudos:
-            return random.choice(conteudos[:3])
-    
-    # Recomendação padrão
-    dia_semana = datetime.now().strftime('%A').lower()
-    dias_pt = {
-        'monday': 'segunda', 'tuesday': 'terca', 'wednesday': 'quarta',
-        'thursday': 'quinta', 'friday': 'sexta', 'saturday': 'sabado', 'sunday': 'domingo'
-    }
-    dia = dias_pt.get(dia_semana, 'segunda')
-    recomendacao_dia = RECOMENDACOES_DIARIAS[dia]
-    categoria = recomendacao_dia['categoria']
-    
-    conteudos = CATALOGO_PREMIUM.get(categoria, [])
-    return conteudos[0] if conteudos else None
-
-# 📊 SISTEMA DE ESTATÍSTICAS EM TEMPO REAL
-def atualizar_estatisticas():
-    conn = get_db()
-    c = conn.cursor()
-    hoje = datetime.now().strftime('%Y-%m-%d')
-    
-    # Estatísticas do dia
-    total_usuarios = c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
-    novos_usuarios = c.execute("""
-        SELECT COUNT(*) FROM usuarios 
-        WHERE DATE(data_cadastro) = DATE('now')
-    """).fetchone()[0]
-    
-    pedidos_dia = c.execute("""
-        SELECT COUNT(*) FROM pedidos 
-        WHERE DATE(data_pedido) = DATE('now')
-    """).fetchone()[0]
-    
-    # Filmes mais pedidos
-    c.execute("""
-        SELECT filme_titulo, COUNT(*) as total 
-        FROM pedidos 
-        WHERE DATE(data_pedido) = DATE('now')
-        GROUP BY filme_titulo 
-        ORDER BY total DESC 
-        LIMIT 5
-    """)
-    filmes_populares = c.fetchall()
-    
-    filmes_str = ", ".join([f"{f[0]} ({f[1]})" for f in filmes_populares])
-    
-    # Atualizar tabela de estatísticas
-    c.execute("""
-        INSERT INTO estatisticas 
-        (data, total_usuarios, novos_usuarios, pedidos_dia, filmes_mais_pedidos)
-        VALUES (?, ?, ?, ?, ?)
-    """, (hoje, total_usuarios, novos_usuarios, pedidos_dia, filmes_str))
-    
+    c.execute("INSERT INTO logs (user_id, acao, detalhes) VALUES (?, ?, ?)",
+              (user_id, acao, detalhes))
     conn.commit()
     conn.close()
 
-# 📨 SISTEMA DE NOTIFICAÇÕES AUTOMÁTICAS
-def enviar_notificacoes_automaticas():
+def atualizar_ultimo_login(user_id):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE usuarios SET ultimo_login = CURRENT_TIMESTAMP WHERE user_id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+# 🎯 SISTEMA DE BOAS-VINDAS
+def verificar_boas_vindas(user_id):
     conn = get_db()
     c = conn.cursor()
     
-    # Notificar usuários inativos há 7 dias
-    c.execute("""
-        SELECT user_id FROM usuarios 
-        WHERE DATE(ultimo_login) < DATE('now', '-7 days')
-        AND creditos > 0
-    """)
-    usuarios_inativos = c.fetchall()
+    # Verificar se é novo usuário
+    c.execute("SELECT COUNT(*) FROM pedidos WHERE user_id = ?", (user_id,))
+    tem_pedidos = c.fetchone()[0]
     
-    for usuario in usuarios_inativos:
-        try:
-            recomendacao = gerar_recomendacao_personalizada(usuario['user_id'])
-            if recomendacao:
-                markup = InlineKeyboardMarkup()
-                markup.add(InlineKeyboardButton(
-                    "🎬 Ver Detalhes", 
-                    callback_data=f"detalhes_{recomendacao['id']}"
-                ))
-                
-                bot.send_message(
-                    usuario['user_id'],
-                    f"""
-🎬 *VOLTE AO CINEMA PRO!* 🎬
-
-Olá! Notamos que você tem créditos disponíveis e está um tempo sem pedir.
-
-🎯 *RECOMENDAÇÃO ESPECIAL PARA VOCÊ:*
-*{recomendacao['titulo']}*
-
-⭐ *Avaliação:* {recomendacao['imdb']}
-🎭 *Gênero:* {recomendacao['genero']}
-⏰ *Duração:* {recomendacao['duracao']}
-
-💎 *Use seus créditos e aproveite!*
-                    """,
-                    parse_mode='Markdown',
-                    reply_markup=markup
-                )
-        except:
-            pass
+    if tem_pedidos == 0:
+        # Dar 3 créditos de boas-vindas
+        c.execute("UPDATE usuarios SET creditos_bonus = creditos_bonus + 3 WHERE user_id = ?", (user_id,))
+        c.execute("INSERT INTO transacoes (user_id, tipo, valor) VALUES (?, 'bonus_boas_vindas', 3)", (user_id,))
+        conn.commit()
+        
+        conn.close()
+        return True
     
     conn.close()
+    return False
 
-# ⏰ AGENDADOR DE TAREFAS
-def agendar_tarefas():
-    # Atualizar estatísticas diariamente
-    threading.Timer(86400, atualizar_estatisticas).start()
-    
-    # Enviar notificações a cada 6 horas
-    threading.Timer(21600, enviar_notificacoes_automaticas).start()
-    
-    # Limpar logs antigos semanalmente
-    threading.Timer(604800, lambda: limpar_logs_antigos()).start()
-
-# 🎪 COMANDO START MEGA PROFISSIONAL
+# 👋 COMANDO START PROFISSIONAL
 @bot.message_handler(commands=['start'])
-def start_ultra(message):
+def start_comando(message):
     user_id = message.from_user.id
     username = message.from_user.username or message.from_user.first_name
     
-    # Verificar canais obrigatórios
-    verificado, markup_canais = verificar_canais(user_id)
-    if not verificado:
-        bot.reply_to(message, """
-🎬 *BEM-VINDO AO CINEMA PRO ULTRA!* 🎬
-
-📢 *VERIFICAÇÃO NECESSÁRIA*
-
-Para acessar nosso catálogo premium, você precisa seguir nossos canais oficiais:
-
-⚡ *VANTAGENS DOS CANAIS:*
-• Lançamentos antecipados
-• Promoções exclusivas
-• Notícias do cinema
-• Conteúdo extra gratuito
-
-📌 *ENTRE NOS CANAIS ABAIXO E CLIQUE EM "JÁ ENTREI EM TODOS":*
-        """, parse_mode='Markdown', reply_markup=markup_canais)
-        return
-    
+    # Registrar/Atualizar usuário
     conn = get_db()
     c = conn.cursor()
+    c.execute("INSERT OR IGNORE INTO usuarios (user_id, username) VALUES (?, ?)", (user_id, username))
+    c.execute("UPDATE usuarios SET ultimo_login = CURRENT_TIMESTAMP WHERE user_id = ?", (user_id,))
     
-    # Registrar/Atualizar usuário
-    c.execute("""
-        INSERT OR REPLACE INTO usuarios 
-        (user_id, username, ultimo_login, nivel_fidelidade) 
-        VALUES (?, ?, CURRENT_TIMESTAMP, 
-        COALESCE((SELECT nivel_fidelidade FROM usuarios WHERE user_id = ?), 1))
-    """, (user_id, username, user_id))
+    # Verificar boas-vindas
+    bonus_recebido = verificar_boas_vindas(user_id)
     
-    # Verificar bônus de primeiro usuário
-    total_usuarios = c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
-    c.execute("SELECT primeiro_usuario FROM usuarios WHERE user_id = ?", (user_id,))
+    # Buscar informações
+    c.execute("SELECT creditos, creditos_bonus, vip FROM usuarios WHERE user_id = ?", (user_id,))
     usuario = c.fetchone()
     
-    bonus_text = ""
-    if total_usuarios <= 50 and (not usuario or usuario['primeiro_usuario'] == 0):
-        c.execute("""
-            UPDATE usuarios SET 
-            creditos_bonus = creditos_bonus + 5,
-            primeiro_usuario = 1 
-            WHERE user_id = ?
-        """, (user_id,))
-        bonus_text = "\n🎁 *BÔNUS ESPECIAL: +5 CRÉDITOS DE BOAS-VINDAS!*"
+    creditos_total = usuario['creditos'] + usuario['creditos_bonus']
+    vip_status = "✅ ATIVO" if usuario['vip'] == 1 else "❌ INATIVO"
     
-    # Buscar informações do usuário
-    c.execute("""
-        SELECT creditos, creditos_bonus, vip, vip_tipo, vip_expira, 
-               total_pedidos, nivel_fidelidade 
-        FROM usuarios WHERE user_id = ?
-    """, (user_id,))
-    usuario_info = c.fetchone()
-    
-    creditos_total = (usuario_info['creditos'] or 0) + (usuario_info['creditos_bonus'] or 0)
-    vip_status = "✅ ATIVO" if usuario_info['vip'] == 1 else "❌ INATIVO"
-    if usuario_info['vip_expira']:
-        vip_status += f" (até {usuario_info['vip_expira']})"
-    
-    # Nível de fidelidade
-    niveis_fidelidade = {
-        1: "🎬 Iniciante",
-        2: "🎥 Fã de Cinema", 
-        3: "🎞️ Crítico Premium",
-        4: "🏆 Sócio Elite",
-        5: "👑 Magnata do Cinema"
-    }
-    nivel = niveis_fidelidade.get(usuario_info['nivel_fidelidade'] or 1, "🎬 Iniciante")
-    
-    conn.commit()
     conn.close()
     
-    # Criar menu principal avançado
+    # Registrar log
+    registrar_log(user_id, "start", f"Créditos: {creditos_total}")
+    
+    # Criar teclado principal
     markup = InlineKeyboardMarkup(row_width=2)
     
     botoes = [
-        InlineKeyboardButton("🎬 CATÁLOGO 4K", callback_data="menu_catalogo"),
-        InlineKeyboardButton("🎥 TRAILERS HD", callback_data="menu_trailers"),
-        InlineKeyboardButton("💰 COMPRAR CRÉDITOS", callback_data="comprar_creditos"),
-        InlineKeyboardButton("👑 PLANOS VIP", callback_data="planos_vip"),
-        InlineKeyboardButton("📊 MEU PERFIL", callback_data="meu_perfil"),
-        InlineKeyboardButton("🎁 RECOMPENSAS", callback_data="recompensas"),
-        InlineKeyboardButton("⭐ AVALIAÇÕES", callback_data="avaliacoes"),
-        InlineKeyboardButton("📞 SUPORTE VIP", url=f"https://t.me/{ADMIN_USERNAME}"),
-        InlineKeyboardButton("📋 COMANDOS", callback_data="comandos_avancados"),
-        InlineKeyboardButton("⚙️ CONFIGURAÇÕES", callback_data="configuracoes")
+        InlineKeyboardButton("🎬 CATÁLOGO COMPLETO", callback_data="catalogo"),
+        InlineKeyboardButton("🚀 LANÇAMENTOS", callback_data="lancamentos"),
+        InlineKeyboardButton("💰 COMPRAR CRÉDITOS", callback_data="comprar"),
+        InlineKeyboardButton("👑 VER PLANOS VIP", callback_data="vip"),
+        InlineKeyboardButton("📊 MEU PERFIL", callback_data="perfil"),
+        InlineKeyboardButton("🎥 TRAILERS", callback_data="trailers"),
+        InlineKeyboardButton("⭐ RECOMENDAÇÃO DO DIA", callback_data="recomendacao"),
+        InlineKeyboardButton("📞 SUPORTE", url=f"https://t.me/{ADMIN_USERNAME}")
     ]
     
     # Layout organizado
     for i in range(0, len(botoes), 2):
-        if i+1 < len(botoes):
-            markup.add(botoes[i], botoes[i+1])
+        markup.add(botoes[i], botoes[i+1])
     
+    # Adicionar botão admin se for admin
     if is_admin(user_id, username):
-        markup.add(InlineKeyboardButton("👑 PAINEL ADMIN", callback_data="painel_admin"))
+        markup.add(InlineKeyboardButton("👑 PAINEL ADMIN", callback_data="admin"))
     
-    # Mensagem de boas-vindas premium
+    # Mensagem de boas-vindas
+    bonus_text = "\n🎁 *BÔNUS: 3 CRÉDITOS DE BOAS-VINDAS!*" if bonus_recebido else ""
+    
     bot.reply_to(message, f"""
-🎬 *CINEMA PRO ULTRA - EXPERIÊNCIA PREMIUM* 🎬
+🎬 *CINEMA PRO ULTRA - BEM-VINDO!* 🎬
 
 👤 *SEU PERFIL:*
-• 🆔 ID: `{user_id}`
-• 💎 Créditos: *{creditos_total}* {bonus_text}
-• 👑 VIP: *{vip_status}*
-• 🎯 Nível: {nivel}
-• 📊 Pedidos: {usuario_info['total_pedidos'] or 0}
+🆔 ID: `{user_id}`
+💎 Créditos: *{creditos_total}* {bonus_text}
+👑 VIP: *{vip_status}*
 
-🌟 *RECURSOS EXCLUSIVOS:*
+🌟 *SERVIÇOS PREMIUM:*
+• 🎬 100+ Filmes/Séries em 4K HDR
+• 🚀 Lançamentos simultâneos ao cinema
+• ⚡ Entrega em 5-15 minutos
+• 📞 Suporte VIP 24/7
 
-🎬 *CATÁLOGO MEGA:*
-• 50+ Filmes/Séries em 4K HDR
-• Conteúdo exclusivo VIP
-• Lançamentos simultâneos
+💡 *COMO FUNCIONA:*
+1️⃣ Escolha seu filme/série
+2️⃣ Use 1 crédito por pedido
+3️⃣ Receba o link em até 15min
+4️⃣ Aproveite em qualidade 4K!
 
-💎 *SISTEMA AVANÇADO:*
-• Recomendações personalizadas AI
-• Sistema de fidelidade
-• Recompensas diárias
-• Notificações inteligentes
+🎯 *COMANDOS PRINCIPAIS:*
+`/catalogo` - Ver catálogo completo
+`/creditos` - Ver seus créditos
+`/comprar` - Comprar mais créditos
+`/vip` - Planos VIP
+`/ajuda` - Ajuda completa
 
-⚡ *BENEFÍCIOS:*
-• Entrega em 5-15 minutos
-• Qualidade cinema garantida
-• Suporte 24/7 premium
-• Atualizações constantes
-
-📈 *ESTATÍSTICAS ATUAIS:*
-• 99.8% Satisfação dos clientes
-• 4.9/5 ⭐ Avaliação média
-• 15min tempo médio de entrega
-
-🎯 *SELECIONE UMA OPÇÃO:*
+⚡ *ESCOLHA UMA OPÇÃO ABAIXO:*
     """, parse_mode='Markdown', reply_markup=markup)
 
-# 🎬 SISTEMA DE CATÁLOGO AVANÇADO COM FILTROS
-@bot.message_handler(commands=['catalogo', 'filmes', 'series'])
-def catalogo_avancado(message):
+# 🎬 CATÁLOGO COMPLETO
+@bot.message_handler(commands=['catalogo'])
+def catalogo_comando(message):
     markup = InlineKeyboardMarkup(row_width=2)
     
-    # Categorias principais
     categorias = [
-        ("🎬 AÇÃO EXTREMA", "categoria_filmes_acao"),
-        ("🌍 AVENTURA ÉPICA", "categoria_filmes_aventura"),
-        ("📺 SÉRIES PREMIUM", "categoria_series_drama"),
-        ("🎌 ANIMES LEGENDADOS", "categoria_animes"),
-        ("🚀 LANÇAMENTOS 2025", "categoria_lancamentos"),
-        ("🎥 ANIMAÇÃO 4K", "categoria_filmes_animacao"),
-        ("😨 TERROR PREMIUM", "categoria_terror"),
-        ("📽️ DOCUMENTÁRIOS", "categoria_documentarios"),
-        ("🇧🇷 CINEMA NACIONAL", "categoria_brasileiros")
+        ("🎬 AÇÃO 2025", "categoria_acao_2025"),
+        ("🌍 AVENTURA 2025", "categoria_aventura_2025"),
+        ("🎥 ANIMAÇÃO 2025", "categoria_animacao_2025"),
+        ("📺 SÉRIES 2025", "categoria_series_2025"),
+        ("🎌 ANIMES 2025", "categoria_animes_2025"),
+        ("😨 TERROR 2025", "categoria_terror_2025"),
+        ("🇧🇷 BRASILEIROS", "categoria_brasileiros"),
+        ("🚀 LANÇAMENTOS", "categoria_lancamentos_semana")
     ]
     
-    # Layout organizado
     for i in range(0, len(categorias), 2):
         if i+1 < len(categorias):
             markup.add(
@@ -996,81 +648,397 @@ def catalogo_avancado(message):
                 InlineKeyboardButton(categorias[i+1][0], callback_data=categorias[i+1][1])
             )
     
-    # Filtros avançados
-    markup.add(InlineKeyboardButton("🎯 FILTRAR POR QUALIDADE", callback_data="filtro_qualidade"))
-    markup.add(InlineKeyboardButton("⭐ MAIS BEM AVALIADOS", callback_data="top_avaliados"))
-    markup.add(InlineKeyboardButton("🎁 PROMOÇÕES", callback_data="promocoes"))
+    markup.add(InlineKeyboardButton("🔍 BUSCAR FILME", callback_data="buscar"))
+    markup.add(InlineKeyboardButton("🏠 VOLTAR AO INÍCIO", callback_data="inicio"))
     
-    # Navegação
-    markup.add(
-        InlineKeyboardButton("🔍 BUSCAR FILME", callback_data="buscar_filme"),
-        InlineKeyboardButton("🏠 INÍCIO", callback_data="menu_principal")
-    )
-    
-    bot.reply_to(message, f"""
-🎬 *CATÁLOGO ULTRA PREMIUM 2025* 🎬
+    bot.reply_to(message, """
+🎬 *CATÁLOGO PREMIUM 2025* 🎬
 
-📊 *ESTATÍSTICAS DO CATÁLOGO:*
-• 50+ Títulos em 4K HDR
-• 10 Categorias exclusivas
-• 99% Disponibilidade imediata
-• Atualização diária de conteúdo
+📊 *100+ TÍTULOS DISPONÍVEIS EM 4K HDR*
 
-🎯 *FILTROS AVANÇADOS:*
-• Por qualidade (4K, HDR, IMAX)
-• Por avaliação (IMDb 8.0+)
-• Por gênero específico
-• Por ano de lançamento
+🏆 *CATEGORIAS EXCLUSIVAS:*
 
-💎 *DESTAQUES DA SEMANA:*
-1. VENOM 3 - 8.2/10 ⭐ (4K HDR)
-2. STRANGER THINGS 5 - 9.2/10 ⭐ (4K Dolby Vision)
-3. DEMON SLAYER FINAL - 9.7/10 ⭐ (4K Blu-ray)
+🎬 *AÇÃO 2025*
+• Venom 3, John Wick 5, Mission Impossible 9
+• Ação intensa em qualidade máxima
 
-⚡ *NOVOS RECURSOS:*
-• Sistema de avaliações
-• Lista de desejos
-• Histórico de visualização
-• Recomendações baseadas em seu gosto
+🌍 *AVENTURA 2025*
+• Avatar 4, Indiana Jones 6
+• Mundos fantásticos e épicos
 
-📈 *POPULARES AGORA:*
-🔥 *Em alta:* Avatar 4, John Wick 5
-📈 *Crescendo:* The Last of Us 3
-🎉 *Novidade:* Deadpool 4
+🎥 *ANIMAÇÃO 2025*
+• Spider-Man Beyond, Frozen 3
+• Animação de qualidade cinema
 
-🔍 *BUSQUE DIRETAMENTE:*
-`/buscar nome_do_filme`
-`/filme venom 3`
-`/serie stranger things`
+📺 *SÉRIES 2025*
+• Stranger Things 5, The Last of Us 3
+• Temporadas completas UHD
 
-🎯 *ESCOLHA UMA CATEGORIA OU FILTRO:*
+🎌 *ANIMES 2025*
+• Demon Slayer, Attack on Titan, Jujutsu Kaisen
+• Animes legendados em 4K
+
+😨 *TERROR 2025*
+• Smile 2, The Conjuring 4
+• Terror de qualidade premium
+
+🇧🇷 *BRASILEIROS*
+• Cidade Alta 2
+• Cinema nacional em 4K
+
+🚀 *LANÇAMENTOS DA SEMANA*
+• Novidades quentinhas do forno!
+
+💎 *Todos por apenas 1 crédito cada!*
+
+🎯 *Selecione uma categoria:*
     """, parse_mode='Markdown', reply_markup=markup)
 
-# 🔍 SISTEMA DE BUSCA INTELIGENTE
-@bot.message_handler(commands=['buscar', 'search', 'filme', 'serie'])
-def buscar_conteudo(message):
+# 💰 COMPRAR CRÉDITOS
+@bot.message_handler(commands=['comprar', 'creditos'])
+def comprar_comando(message):
+    markup = InlineKeyboardMarkup(row_width=2)
+    
+    # Pacotes de créditos
+    pacotes = [
+        ("💎 1 CRÉDITO - 20 MZN", "pacote_1"),
+        ("💎 3 CRÉDITOS - 50 MZN", "pacote_3"),
+        ("💎 5 CRÉDITOS - 80 MZN", "pacote_5"),
+        ("💎 10 CRÉDITOS - 150 MZN", "pacote_10")
+    ]
+    
+    for i in range(0, len(pacotes), 2):
+        markup.add(
+            InlineKeyboardButton(pacotes[i][0], callback_data=pacotes[i][1]),
+            InlineKeyboardButton(pacotes[i+1][0], callback_data=pacotes[i+1][1])
+        )
+    
+    markup.add(InlineKeyboardButton("👑 PLANOS VIP", callback_data="vip"))
+    markup.add(InlineKeyboardButton("🏠 VOLTAR AO INÍCIO", callback_data="inicio"))
+    
+    bot.reply_to(message, f"""
+💰 *COMPRAR CRÉDITOS* 💰
+
+🎯 *1 CRÉDITO = 1 FILME/SÉRIE EM 4K*
+
+📦 *PACOTES DISPONÍVEIS:*
+
+💎 *CRÉDITOS AVULSOS:*
+• 1 Crédito - 20 MZN
+• 3 Créditos - 50 MZN (Economize 10 MZN)
+• 5 Créditos - 80 MZN (Economize 20 MZN)
+• 10 Créditos - 150 MZN (Economize 50 MZN)
+
+👑 *PLANOS VIP (RECOMENDADO):*
+• 15 créditos por 50 MZN/mês
+• 50 créditos por 120 MZN/3 meses
+• 120 créditos por 200 MZN/6 meses
+
+💳 *FORMAS DE PAGAMENTO:*
+• M-Pesa: `{CONTATOS['mpesa']}`
+• e-Mola: `{CONTATOS['emola']}`
+• PayPal: `{CONTATOS['paypal']}`
+
+⚡ *PROCESSO RÁPIDO:*
+1. Escolha seu pacote
+2. Faça o pagamento
+3. Envie comprovante para @{ADMIN_USERNAME}
+4. Receba créditos em 2-5 minutos
+
+🎁 *PROMOÇÕES ATIVAS:*
+• Primeira compra: +3 créditos bônus!
+• Compra acima de 100 MZN: +5% de bônus
+
+📞 *Dúvidas sobre pagamento?*
+Fale com @{ADMIN_USERNAME}
+    """, parse_mode='Markdown', reply_markup=markup)
+
+# 👑 PLANOS VIP
+@bot.message_handler(commands=['vip'])
+def vip_comando(message):
+    markup = InlineKeyboardMarkup(row_width=1)
+    
+    for plano_key, plano in PLANOS_VIP.items():
+        markup.add(InlineKeyboardButton(
+            f"{plano['nome']} - {plano['preco']}",
+            callback_data=f"plano_{plano_key}"
+        ))
+    
+    markup.add(InlineKeyboardButton("💰 CRÉDITOS AVULSOS", callback_data="comprar"))
+    markup.add(InlineKeyboardButton("🏠 VOLTAR AO INÍCIO", callback_data="inicio"))
+    
+    texto = "👑 *PLANOS VIP PREMIUM* 👑\n\n"
+    
+    for plano_key, plano in PLANOS_VIP.items():
+        texto += f"*{plano['nome']}*\n"
+        texto += f"💰 *Preço:* {plano['preco']}\n"
+        texto += f"💎 *Créditos:* {plano['creditos']}\n\n"
+        
+        for vantagem in plano['vantagens'][:3]:
+            texto += f"{vantagem}\n"
+        
+        texto += "\n"
+    
+    texto += f"""
+⚡ *VANTAGENS EXCLUSIVAS VIP:*
+• Entrega prioritária (5-15 minutos)
+• Suporte VIP 24/7
+• Lançamentos antecipados
+• Catálogo exclusivo
+• Descontos especiais
+
+💳 *FORMAS DE PAGAMENTO:*
+• M-Pesa: `{CONTATOS['mpesa']}`
+• e-Mola: `{CONTATOS['emola']}`
+• PayPal: `{CONTATOS['paypal']}`
+
+📞 *Para assinar:*
+1. Escolha seu plano
+2. Faça o pagamento  
+3. Envie comprovante para @{ADMIN_USERNAME}
+4. Ativação em 5 minutos
+
+🎯 *Clique no plano desejado para mais informações!*
+    """
+    
+    bot.reply_to(message, texto, parse_mode='Markdown', reply_markup=markup)
+
+# 📊 PERFIL DO USUÁRIO
+@bot.message_handler(commands=['perfil', 'me'])
+def perfil_comando(message):
+    user_id = message.from_user.id
+    
+    conn = get_db()
+    c = conn.cursor()
+    
+    c.execute("""
+        SELECT u.*, COUNT(p.id) as total_pedidos
+        FROM usuarios u
+        LEFT JOIN pedidos p ON u.user_id = p.user_id
+        WHERE u.user_id = ?
+        GROUP BY u.user_id
+    """, (user_id,))
+    
+    usuario = c.fetchone()
+    
+    if not usuario:
+        bot.reply_to(message, "❌ Usuário não encontrado!")
+        return
+    
+    creditos_total = usuario['creditos'] + usuario['creditos_bonus']
+    vip_status = "✅ ATIVO" if usuario['vip'] == 1 else "❌ INATIVO"
+    
+    # Buscar pedidos recentes
+    c.execute("""
+        SELECT filme_titulo, status, data_pedido 
+        FROM pedidos 
+        WHERE user_id = ? 
+        ORDER BY data_pedido DESC 
+        LIMIT 5
+    """, (user_id,))
+    
+    pedidos_recentes = c.fetchall()
+    
+    conn.close()
+    
+    markup = InlineKeyboardMarkup(row_width=2)
+    markup.add(
+        InlineKeyboardButton("🔄 ATUALIZAR", callback_data="perfil"),
+        InlineKeyboardButton("📋 HISTÓRICO", callback_data="historico")
+    )
+    markup.add(
+        InlineKeyboardButton("💰 COMPRAR CRÉDITOS", callback_data="comprar"),
+        InlineKeyboardButton("🏠 INÍCIO", callback_data="inicio")
+    )
+    
+    # Construir mensagem
+    texto = f"""
+👤 *MEU PERFIL PREMIUM* 👤
+
+🆔 *ID:* `{user_id}`
+👤 *Nome:* {usuario['username'] or 'Não definido'}
+📅 *Membro desde:* {usuario['data_cadastro'][:10] if usuario['data_cadastro'] else 'Hoje'}
+
+💎 *CRÉDITOS:*
+• Total disponível: *{creditos_total}*
+• Regulares: {usuario['creditos']}
+• Bônus: {usuario['creditos_bonus']}
+
+👑 *VIP:*
+• Status: {vip_status}
+• Tipo: {usuario['vip_tipo'] or 'Nenhum'}
+• Expira: {usuario['vip_expira'] or 'Não aplicável'}
+
+📊 *ESTATÍSTICAS:*
+• Total de pedidos: {usuario['total_pedidos']}
+• Último login: {usuario['ultimo_login'][:16] if usuario['ultimo_login'] else 'Nunca'}
+
+📦 *PEDIDOS RECENTES:*
+"""
+    
+    if pedidos_recentes:
+        for pedido in pedidos_recentes:
+            status_emoji = "✅" if pedido['status'] == 'entregue' else "⏳"
+            texto += f"• {status_emoji} {pedido['filme_titulo']} - {pedido['status']}\n"
+    else:
+        texto += "• Nenhum pedido realizado ainda\n"
+    
+    texto += """
+🎯 *PRÓXIMOS PASSOS:*
+• Faça seu primeiro pedido!
+• Compre créditos para continuar
+• Considere o plano VIP para benefícios
+
+⚡ *Use os botões abaixo para ações rápidas!*
+    """
+    
+    bot.reply_to(message, texto, parse_mode='Markdown', reply_markup=markup)
+
+# 🎥 TRAILERS
+@bot.message_handler(commands=['trailer', 'trailers'])
+def trailers_comando(message):
+    markup = InlineKeyboardMarkup(row_width=2)
+    
+    filmes_trailers = [
+        ("🎬 VENOM 3", "trailer_venom3"),
+        ("🎬 JOHN WICK 5", "trailer_johnwick5"),
+        ("🎬 AVATAR 4", "trailer_avatar4"),
+        ("🎬 SPIDER-MAN", "trailer_spiderman"),
+        ("📺 STRANGER THINGS 5", "trailer_stranger5"),
+        ("🎌 DEMON SLAYER", "trailer_demonslayer")
+    ]
+    
+    for i in range(0, len(filmes_trailers), 2):
+        if i+1 < len(filmes_trailers):
+            markup.add(
+                InlineKeyboardButton(filmes_trailers[i][0], callback_data=filmes_trailers[i][1]),
+                InlineKeyboardButton(filmes_trailers[i+1][0], callback_data=filmes_trailers[i+1][1])
+            )
+    
+    markup.add(InlineKeyboardButton("🏠 VOLTAR AO INÍCIO", callback_data="inicio"))
+    
+    bot.reply_to(message, """
+🎬 *TRAILERS EXCLUSIVOS* 🎬
+
+🎯 *ASSISTA ANTES DE PEDIR!*
+
+⚡ *VANTAGENS:*
+• Veja a qualidade do conteúdo
+• Conheça a história antes de comprar
+• Cenas exclusivas em alta definição
+
+🎥 *TRAILERS DISPONÍVEIS:*
+
+🎬 *FILMES:*
+• Venom 3: A Última Batalha
+• John Wick 5: Legado
+• Avatar 4: O Legado
+• Spider-Man: Beyond the Spider-Verse
+
+📺 *SÉRIES:*
+• Stranger Things 5
+• The Last of Us 3
+
+🎌 *ANIMES:*
+• Demon Slayer: Final Arc
+• Attack on Titan: Final Chapters
+
+💡 *APÓS O TRAILER:*
+• Filme completo por 1 crédito
+• Qualidade 4K HDR garantida
+• Entrega em 15-30 minutos
+
+🎯 *Escolha um trailer para assistir:*
+    """, parse_mode='Markdown', reply_markup=markup)
+
+# ⭐ RECOMENDAÇÃO DO DIA
+@bot.message_handler(commands=['recomendacao', 'filmedodia'])
+def recomendacao_comando(message):
+    dia_semana = datetime.now().strftime('%A').lower()
+    dias_pt = {
+        'monday': 'segunda', 'tuesday': 'terca', 'wednesday': 'quarta',
+        'thursday': 'quinta', 'friday': 'sexta', 'saturday': 'sabado', 'sunday': 'domingo'
+    }
+    
+    dia = dias_pt.get(dia_semana, 'segunda')
+    recomendacao = RECOMENDACOES_DIARIAS[dia]
+    
+    # Buscar informações do filme
+    filme_info = None
+    for categoria, filmes in CATALOGO_PREMIUM.items():
+        if categoria == recomendacao['categoria']:
+            for filme in filmes:
+                if recomendacao['filme'].split(':')[0].strip() in filme['titulo']:
+                    filme_info = filme
+                    break
+        if filme_info:
+            break
+    
+    markup = InlineKeyboardMarkup()
+    if filme_info:
+        markup.add(
+            InlineKeyboardButton("🎬 VER DETALHES", callback_data=f"detalhes_{filme_info['id']}"),
+            InlineKeyboardButton("🎥 VER TRAILER", url=filme_info['link_trailer'])
+        )
+        markup.add(InlineKeyboardButton("📦 PEDIR AGORA", callback_data=f"pedir_{filme_info['id']}"))
+    
+    markup.add(InlineKeyboardButton("🏠 VOLTAR AO INÍCIO", callback_data="inicio"))
+    
+    texto = f"""
+⭐ *RECOMENDAÇÃO DO DIA* ⭐
+{recomendacao['hashtag']}
+
+{recomendacao['titulo']}
+
+🎬 *FILME SUGERIDO:*
+*{recomendacao['filme']}*
+
+"""
+    
+    if filme_info:
+        texto += f"""
+📖 *Sinopse:*
+{filme_info['descricao']}
+
+⭐ *Avaliação IMDb:* {filme_info['imdb']}
+🎭 *Gênero:* {filme_info['genero']}
+⏰ *Duração:* {filme_info['duracao']}
+💾 *Tamanho:* {filme_info['tamanho']}
+🎯 *Qualidade:* {filme_info['qualidade']}
+
+💎 *PREÇO:* 1 CRÉDITO
+⚡ *ENTREGA:* 15-30 minutos
+
+🎯 *Use 1 crédito e receba agora mesmo!*
+        """
+    
+    bot.reply_to(message, texto, parse_mode='Markdown', reply_markup=markup)
+
+# 🔍 BUSCAR FILMES
+@bot.message_handler(commands=['buscar', 'search'])
+def buscar_comando(message):
     args = message.text.split()[1:]
     
     if not args:
         bot.reply_to(message, """
-🔍 *BUSCA INTELIGENTE*
+🔍 *BUSCA DE FILMES/SÉRIES*
 
 ⚡ *Como usar:*
 `/buscar nome do filme`
-`/filme venom 3`
-`/serie stranger things`
+`/buscar venom 3`
+`/buscar stranger things`
 
 💡 *Exemplos:*
 • `/buscar avatar 4`
-• `/filme john wick`
-• `/serie the last of us`
+• `/buscar john wick`
+• `/buscar demon slayer`
 
 🎯 *Dicas:*
 • Use palavras-chave
 • Tente o nome em inglês
 • Verifique a grafia
 
-🔎 *Ou clique abaixo para navegar:*
+🔎 *Ou use os botões do catálogo!*
         """)
         return
     
@@ -1078,33 +1046,61 @@ def buscar_conteudo(message):
     resultados = []
     
     # Buscar em todas as categorias
-    for categoria, conteudos in CATALOGO_PREMIUM.items():
-        for conteudo in conteudos:
-            if (termo_busca in conteudo['titulo'].lower() or 
-                termo_busca in conteudo['descricao'].lower() or
-                termo_busca in conteudo['genero'].lower()):
-                resultados.append((conteudo, categoria))
+    for categoria, filmes in CATALOGO_PREMIUM.items():
+        for filme in filmes:
+            if (termo_busca in filme['titulo'].lower() or 
+                termo_busca in filme['descricao'].lower() or
+                termo_busca in filme['genero'].lower()):
+                resultados.append(filme)
     
     if resultados:
-        # Mostrar primeiros 5 resultados
+        # Limitar a 5 resultados
+        resultados = resultados[:5]
+        
         texto = f"🔍 *RESULTADOS PARA: '{termo_busca}'*\n\n"
         
-        for i, (resultado, categoria) in enumerate(resultados[:5], 1):
-            texto += f"*{i}. {resultado['titulo']}*\n"
-            texto += f"   ⭐ {resultado['imdb']} • 🎭 {resultado['genero']}\n"
-            texto += f"   ⏰ {resultado['duracao']} • 📦 {resultado['tamanho']}\n\n"
+        for i, filme in enumerate(resultados, 1):
+            texto += f"*{i}. {filme['titulo']}*\n"
+            texto += f"   ⭐ {filme['imdb']} • 🎭 {filme['genero']}\n"
+            texto += f"   ⏰ {filme['duracao']} • 📦 {filme['tamanho']}\n\n"
         
-        if len(resultados) > 5:
-            texto += f"📊 *Mostrando 5 de {len(resultados)} resultados*\n"
-        
-        markup = InlineKeyboardMarkup()
-        for i, (resultado, _) in enumerate(resultados[:3], 1):
-            markup.add(InlineKeyboardButton(
-                f"🎬 {i}. {resultado['titulo'][:20]}...",
-                callback_data=f"detalhes_{resultado['id']}"
-            ))
-        
-        markup.add(InlineKeyboardButton("🔍 BUSCAR NOVAMENTE", callback_data="buscar_filme"))
+        if len(resultados) == 1:
+            # Se só um resultado, mostrar detalhes
+            filme = resultados[0]
+            markup = InlineKeyboardMarkup()
+            markup.add(
+                InlineKeyboardButton("🎬 PEDIR AGORA", callback_data=f"pedir_{filme['id']}"),
+                InlineKeyboardButton("🎥 VER TRAILER", url=filme['link_trailer'])
+            )
+            markup.add(InlineKeyboardButton("🔍 NOVA BUSCA", callback_data="buscar"))
+            
+            texto = f"""
+🎬 *{filme['titulo']}*
+
+📖 *Sinopse:*
+{filme['descricao']}
+
+⭐ *Avaliação IMDb:* {filme['imdb']}
+🎭 *Gênero:* {filme['genero']} • {filme['ano']}
+⏰ *Duração:* {filme['duracao']}
+💾 *Tamanho:* {filme['tamanho']}
+🎯 *Qualidade:* {filme['qualidade']}
+🔊 *Áudio:* {filme['audio']}
+📝 *Legendas:* {filme['legendas']}
+
+💎 *PREÇO:* 1 CRÉDITO
+⚡ *ENTREGA:* 15-30 minutos
+            """
+        else:
+            # Múltiplos resultados
+            markup = InlineKeyboardMarkup()
+            for i, filme in enumerate(resultados, 1):
+                markup.add(InlineKeyboardButton(
+                    f"🎬 {i}. {filme['titulo'][:30]}...",
+                    callback_data=f"detalhes_{filme['id']}"
+                ))
+            
+            markup.add(InlineKeyboardButton("🔍 NOVA BUSCA", callback_data="buscar"))
         
         bot.reply_to(message, texto, parse_mode='Markdown', reply_markup=markup)
     else:
@@ -1117,311 +1113,602 @@ Não encontramos conteúdo correspondente a *'{termo_busca}'*.
 • Verifique a grafia
 • Tente o nome original em inglês
 • Use palavras-chave mais gerais
-• Explore o catálogo completo
 
-📂 *CATÁLOGO DISPONÍVEL:*
+📂 *CATÁLOGO COMPLETO:*
 `/catalogo` - Ver todas as categorias
-`/lancamentos` - Novidades
+`/lancamentos` - Novidades da semana
 `/recomendacao` - Sugestão do dia
         """, parse_mode='Markdown')
 
-# 💰 SISTEMA DE COMPRAS AVANÇADO
-@bot.message_handler(commands=['comprar', 'creditos', 'vip'])
-def sistema_compras(message):
-    markup = InlineKeyboardMarkup(row_width=2)
+# 📦 FAZER PEDIDO
+@bot.message_handler(commands=['pedir'])
+def pedir_comando(message):
+    args = message.text.split()[1:]
     
-    # Pacotes de créditos
-    pacotes = [
-        ("💎 1 CRÉDITO - 20 MZN", "comprar_1"),
-        ("💎 3 CRÉDITOS - 50 MZN", "comprar_3"),
-        ("💎 5 CRÉDITOS - 80 MZN", "comprar_5"),
-        ("💎 10 CRÉDITOS - 150 MZN", "comprar_10")
-    ]
+    if not args:
+        user_id = message.from_user.id
+        
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT creditos, creditos_bonus FROM usuarios WHERE user_id = ?", (user_id,))
+        usuario = c.fetchone()
+        
+        creditos_total = usuario['creditos'] + usuario['creditos_bonus'] if usuario else 0
+        conn.close()
+        
+        bot.reply_to(message, f"""
+📦 *FAZER PEDIDO*
+
+💎 *Seus créditos disponíveis:* *{creditos_total}*
+
+⚡ *Como pedir:*
+`/pedir Nome do Filme`
+
+🎯 *Exemplos:*
+`/pedir Venom 3`
+`/pedir Stranger Things 5`
+`/pedir Demon Slayer`
+
+💡 *Dicas:*
+• Use `/catalogo` para ver opções
+• Use `/buscar` para encontrar específicos
+• 1 crédito = 1 filme/série
+
+🎬 *Ou navegue pelo catálogo!*
+        """)
+        return
     
-    for i in range(0, len(pacotes), 2):
-        if i+1 < len(pacotes):
-            markup.add(
-                InlineKeyboardButton(pacotes[i][0], callback_data=pacotes[i][1]),
-                InlineKeyboardButton(pacotes[i+1][0], callback_data=pacotes[i+1][1])
-            )
+    user_id = message.from_user.id
+    username = message.from_user.username or message.from_user.first_name
+    filme_nome = ' '.join(args)
     
-    # Planos VIP
-    markup.add(InlineKeyboardButton("👑 VER PLANOS VIP", callback_data="planos_vip_detalhado"))
+    # Buscar filme
+    filme_info = None
+    for categoria, filmes in CATALOGO_PREMIUM.items():
+        for filme in filmes:
+            if filme_nome.lower() in filme['titulo'].lower():
+                filme_info = filme
+                categoria_filme = categoria
+                break
+        if filme_info:
+            break
     
-    # Outras opções
-    markup.add(
-        InlineKeyboardButton("🎁 RECOMPENSAS", callback_data="recompensas"),
-        InlineKeyboardButton("📊 MEUS CRÉDITOS", callback_data="meus_creditos")
-    )
+    if not filme_info:
+        bot.reply_to(message, f"""
+❌ *FILME NÃO ENCONTRADO*
+
+Não encontramos *{filme_nome}* no catálogo.
+
+💡 *SUGESTÕES:*
+• Verifique a grafia
+• Use `/catalogo` para ver opções
+• Use `/buscar` para busca avançada
+
+🎯 *Filmes similares disponíveis:*
+`/catalogo` - Ver catálogo completo
+        """)
+        return
     
-    # Suporte
-    markup.add(InlineKeyboardButton("📞 FALAR COM SUPORTE", url=f"https://t.me/{ADMIN_USERNAME}"))
+    # Verificar créditos
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT creditos, creditos_bonus FROM usuarios WHERE user_id = ?", (user_id,))
+    usuario = c.fetchone()
+    
+    if not usuario:
+        bot.reply_to(message, "❌ *Erro: Usuário não encontrado! Use /start primeiro.*", parse_mode='Markdown')
+        conn.close()
+        return
+    
+    creditos_total = usuario['creditos'] + usuario['creditos_bonus']
+    
+    if creditos_total < 1:
+        markup = InlineKeyboardMarkup()
+        markup.add(
+            InlineKeyboardButton("💰 COMPRAR CRÉDITOS", callback_data="comprar"),
+            InlineKeyboardButton("👑 VER VIP", callback_data="vip")
+        )
+        
+        bot.reply_to(message, f"""
+❌ *CRÉDITOS INSUFICIENTES*
+
+💎 *Seus créditos:* *{creditos_total}*
+🎬 *Filme desejado:* *{filme_info['titulo']}*
+
+⚡ *Você precisa de 1 crédito para fazer este pedido.*
+
+💫 *OPÇÕES:*
+• Comprar créditos avulsos
+• Assinar plano VIP (mais econômico)
+• Ganhar créditos indicando amigos
+
+🎁 *Promoção:* Primeira compra dá +3 créditos bônus!
+        """, parse_mode='Markdown', reply_markup=markup)
+        conn.close()
+        return
+    
+    # Processar pedido
+    # Deduzir primeiro dos créditos regulares, depois dos bônus
+    if usuario['creditos'] >= 1:
+        c.execute("UPDATE usuarios SET creditos = creditos - 1 WHERE user_id = ?", (user_id,))
+    else:
+        creditos_necessarios = 1 - usuario['creditos']
+        c.execute("UPDATE usuarios SET creditos = 0, creditos_bonus = creditos_bonus - ? WHERE user_id = ?", 
+                 (creditos_necessarios, user_id))
+    
+    # Registrar pedido
+    pedido_id = c.execute("""
+        INSERT INTO pedidos (user_id, username, filme_id, filme_titulo, status)
+        VALUES (?, ?, ?, ?, 'processando')
+    """, (user_id, username, filme_info['id'], filme_info['titulo'])).lastrowid
+    
+    # Atualizar total de pedidos
+    c.execute("UPDATE usuarios SET total_pedidos = total_pedidos + 1 WHERE user_id = ?", (user_id,))
+    
+    # Registrar transação
+    c.execute("""
+        INSERT INTO transacoes (user_id, tipo, valor)
+        VALUES (?, 'pedido_filme', -1)
+    """, (user_id,))
+    
+    conn.commit()
+    conn.close()
+    
+    # Registrar log
+    registrar_log(user_id, "pedido", f"Filme: {filme_info['titulo']}, ID: {pedido_id}")
+    
+    # Notificar admin
+    try:
+        admin_msg = f"""
+📦 *NOVO PEDIDO* 📦
+
+🆔 *Pedido:* #{pedido_id}
+👤 *Usuário:* @{username} ({user_id})
+🎬 *Filme:* {filme_info['titulo']}
+💎 *Créditos usados:* 1
+💰 *Créditos restantes:* {creditos_total - 1}
+⏰ *Data:* {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+⚡ *Status:* Processando
+        """
+        bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
+    except:
+        pass
+    
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(
+        "📞 ACOMPANHAR PEDIDO", 
+        url=f"https://t.me/{ADMIN_USERNAME}"
+    ))
+    markup.add(InlineKeyboardButton(
+        "🎬 FAZER NOVO PEDIDO", 
+        callback_data="catalogo"
+    ))
     
     bot.reply_to(message, f"""
-💰 *SISTEMA DE CRÉDITOS PREMIUM* 💰
+✅ *PEDIDO CONFIRMADO COM SUCESSO!* ✅
 
-🎯 *1 CRÉDITO = 1 FILME/SÉRIE EM 4K*
+🆔 *Número do Pedido:* *#{pedido_id}*
+🎬 *Filme:* *{filme_info['titulo']}*
+💎 *Créditos utilizados:* 1
+💰 *Créditos restantes:* *{creditos_total - 1}*
 
-📊 *PACOTES DISPONÍVEIS:*
+⏰ *TEMPO DE ENTREGA:*
+• Normal: 15-30 minutos
+• VIP: 5-15 minutos (usuários VIP)
 
-💎 *CRÉDITOS AVULSOS:*
-• 1 Crédito - 20 MZN
-• 3 Créditos - 50 MZN (Economize 10 MZN)
-• 5 Créditos - 80 MZN (Economize 20 MZN) 
-• 10 Créditos - 150 MZN (Economize 50 MZN)
+📦 *MÉTODO DE ENTREGA:*
+• Google Drive (recomendado)
+• Mega.nz
+• MediaFire
+• Link direto via HTTP
 
-👑 *PLANOS VIP (RECOMENDADO):*
-• VIP 1 Mês - 50 MZN (15 créditos)
-• VIP 3 Meses - 120 MZN (50 créditos)
-• VIP 6 Meses - 200 MZN (120 créditos)
-• VIP Anual - 350 MZN (300 créditos)
+⚡ *QUALIDADE GARANTIDA:*
+• Resolução: 4K HDR
+• Áudio: {filme_info['audio']}
+• Legendas: {filme_info['legendas']}
+• Formato: MKV/MP4
 
-💳 *FORMAS DE PAGAMENTO:*
-• M-Pesa: `{CONTATOS['mpesa']}`
-• e-Mola: `{CONTATOS['emola']}`
-• PayPal: `{CONTATOS['paypal']}`
-• PicPay: `{CONTATOS['picpay']}`
-• Western Union: `{CONTATOS['western_union']}`
+📞 *ACOMPANHAMENTO:*
+Entre em contato com @{ADMIN_USERNAME} para:
+• Status do pedido
+• Problemas com download
+• Qualidade insatisfatória
 
-⚡ *PROCESSO RÁPIDO:*
-1. Escolha seu pacote
-2. Faça o pagamento
-3. Envie comprovante
-4. Receba em 2-5 minutos
-5. Aproveite seus filmes!
+⭐ *APÓS RECEBER:*
+Avalie sua experiência para nos ajudar a melhorar!
 
-🎁 *PROMOÇÕES ATIVAS:*
-• Primeira compra: +3 créditos bônus
-• Compra acima de 100 MZN: +5%
-• Indique amigos: +2 créditos cada
-
-📞 *SUPORTE 24/7 PARA COMPRAS*
+🎯 *OBRIGADO PELA PREFERÊNCIA!*
     """, parse_mode='Markdown', reply_markup=markup)
 
-# 📊 SISTEMA DE PERFIL DO USUÁRIO
-@bot.message_handler(commands=['perfil', 'me', 'status'])
-def perfil_usuario(message):
+# 👑 PAINEL ADMIN
+@bot.message_handler(commands=['admin'])
+def admin_comando(message):
     user_id = message.from_user.id
+    username = message.from_user.username
+    
+    if not is_admin(user_id, username):
+        bot.reply_to(message, "❌ *Acesso negado! Apenas administradores.*", parse_mode='Markdown')
+        return
     
     conn = get_db()
     c = conn.cursor()
     
-    c.execute("""
-        SELECT u.*, 
-               COUNT(p.id) as total_pedidos,
-               SUM(CASE WHEN p.status = 'entregue' THEN 1 ELSE 0 END) as pedidos_entregues,
-               AVG(p.avaliacao) as media_avaliacoes
-        FROM usuarios u
-        LEFT JOIN pedidos p ON u.user_id = p.user_id
-        WHERE u.user_id = ?
-        GROUP BY u.user_id
-    """, (user_id,))
+    # Estatísticas
+    total_usuarios = c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
+    total_pedidos = c.execute("SELECT COUNT(*) FROM pedidos").fetchone()[0]
+    pedidos_pendentes = c.execute("SELECT COUNT(*) FROM pedidos WHERE status = 'pendente'").fetchone()[0]
+    pedidos_hoje = c.execute("SELECT COUNT(*) FROM pedidos WHERE DATE(data_pedido) = DATE('now')").fetchone()[0]
+    vip_ativos = c.execute("SELECT COUNT(*) FROM usuarios WHERE vip = 1").fetchone()[0]
     
-    usuario = c.fetchone()
-    
-    if not usuario:
-        bot.reply_to(message, "❌ Usuário não encontrado!")
-        conn.close()
-        return
-    
-    # Calcular estatísticas
-    creditos_total = usuario['creditos'] + usuario['creditos_bonus']
-    
-    # Nível de fidelidade
-    nivel = usuario['nivel_fidelidade'] or 1
-    progresso = (nivel / 5) * 100
-    
-    # Próximos benefícios
-    beneficios_proximos = {
-        2: "🎯 Recomendações personalizadas",
-        3: "⚡ Entrega prioritária",
-        4: "🎁 1 crédito bônus mensal",
-        5: "👑 Acesso vitalício beta"
-    }
-    
-    proximo_beneficio = beneficios_proximos.get(nivel + 1, "🏆 Todos benefícios alcançados!")
+    # Receita do dia
+    receita_hoje = c.execute("""
+        SELECT SUM(valor) FROM transacoes 
+        WHERE tipo = 'compra_creditos' 
+        AND DATE(data) = DATE('now')
+        AND status = 'aprovado'
+    """).fetchone()[0] or 0
     
     conn.close()
     
     markup = InlineKeyboardMarkup(row_width=2)
-    markup.add(
-        InlineKeyboardButton("📊 ESTATÍSTICAS", callback_data="estatisticas_perfil"),
-        InlineKeyboardButton("🎯 RECOMENDAÇÕES", callback_data="recomendacoes_personalizadas")
-    )
-    markup.add(
-        InlineKeyboardButton("📋 HISTÓRICO", callback_data="historico_pedidos"),
-        InlineKeyboardButton("⭐ AVALIAÇÕES", callback_data="minhas_avaliacoes")
-    )
-    markup.add(
-        InlineKeyboardButton("⚙️ CONFIGURAR", callback_data="configurar_perfil"),
-        InlineKeyboardButton("🏠 INÍCIO", callback_data="menu_principal")
-    )
+    
+    opcoes_admin = [
+        ("📊 ESTATÍSTICAS", "admin_stats"),
+        ("👥 GERENCIAR USUÁRIOS", "admin_usuarios"),
+        ("💰 ADICIONAR CRÉDITOS", "admin_add_creditos"),
+        ("📦 PEDIDOS PENDENTES", "admin_pedidos_pendentes"),
+        ("👑 GERENCIAR VIP", "admin_vip"),
+        ("📢 ENVIAR ANÚNCIO", "admin_broadcast"),
+        ("📈 RELATÓRIOS", "admin_relatorios"),
+        ("⚙️ CONFIGURAÇÕES", "admin_config")
+    ]
+    
+    for i in range(0, len(opcoes_admin), 2):
+        if i+1 < len(opcoes_admin):
+            markup.add(
+                InlineKeyboardButton(opcoes_admin[i][0], callback_data=opcoes_admin[i][1]),
+                InlineKeyboardButton(opcoes_admin[i+1][0], callback_data=opcoes_admin[i+1][1])
+            )
+    
+    markup.add(InlineKeyboardButton("🔄 ATUALIZAR", callback_data="admin"))
+    markup.add(InlineKeyboardButton("❌ FECHAR", callback_data="fechar_admin"))
     
     bot.reply_to(message, f"""
-👤 *MEU PERFIL PREMIUM* 👤
+👑 *PAINEL ADMIN - CINEMA PRO* 👑
 
-🆔 *ID:* `{usuario['user_id']}`
-👤 *Nome:* {usuario['username'] or 'Não definido'}
-📅 *Membro desde:* {usuario['data_cadastro'][:10] if usuario['data_cadastro'] else 'Hoje'}
+📊 *ESTATÍSTICAS GERAIS:*
+• 👥 Total Usuários: `{total_usuarios}`
+• 📦 Total Pedidos: `{total_pedidos}`
+• ⏳ Pendentes: `{pedidos_pendentes}`
+• 🚀 Hoje: `{pedidos_hoje}`
+• 💰 Receita Hoje: `{receita_hoje:.2f} MZN`
+• 👑 VIPs Ativos: `{vip_ativos}`
 
-💎 *CRÉDITOS:*
-• Total: *{creditos_total}*
-• Regulares: {usuario['creditos']}
-• Bônus: {usuario['creditos_bonus']}
+⚡ *SISTEMA:*
+🟢 *Online e operacional*
+📅 *Última atualização:* {datetime.now().strftime('%H:%M')}
 
-👑 *VIP:*
-• Status: {'✅ ATIVO' if usuario['vip'] == 1 else '❌ INATIVO'}
-• Tipo: {usuario['vip_tipo'] or 'Nenhum'}
-• Expira: {usuario['vip_expira'] or 'Não aplicável'}
-
-📊 *ESTATÍSTICAS:*
-• Pedidos totais: {usuario['total_pedidos'] or 0}
-• Entregues: {usuario['pedidos_entregues'] or 0}
-• Avaliação média: {usuario['media_avaliacoes'] or 'N/A'} ⭐
-
-🏆 *NÍVEL DE FIDELIDADE:* {nivel}/5
-📈 Progresso: {'▓' * nivel}{'░' * (5-nivel)} {progresso}%
-
-🎯 *PRÓXIMO BENEFÍCIO ({nivel+1}/5):*
-{proximo_beneficio}
-
-💡 *DICAS PARA SUBIR DE NÍVEL:*
-• Faça mais pedidos
-• Avalie os conteúdos
-• Compre créditos regularly
-• Indique amigos
-
-⚡ *GERENCIE SEU PERFIL:*
+🎯 *ESCOLHA UMA AÇÃO:*
     """, parse_mode='Markdown', reply_markup=markup)
 
-# 🎮 SISTEMA DE CALLBACKS MEGA EXPANDIDO
+# 🆘 AJUDA COMPLETA
+@bot.message_handler(commands=['ajuda', 'help', 'comandos'])
+def ajuda_comando(message):
+    markup = InlineKeyboardMarkup(row_width=2)
+    
+    botoes_ajuda = [
+        ("🎬 COMO PEDIR", "ajuda_pedir"),
+        ("💰 COMPRAR CRÉDITOS", "ajuda_comprar"),
+        ("👑 PLANOS VIP", "ajuda_vip"),
+        ("📞 SUPORTE", "ajuda_suporte"),
+        ("⚙️ PROBLEMAS COMUNS", "ajuda_problemas"),
+        ("📋 TERMOS", "ajuda_termos")
+    ]
+    
+    for i in range(0, len(botoes_ajuda), 2):
+        if i+1 < len(botoes_ajuda):
+            markup.add(
+                InlineKeyboardButton(botoes_ajuda[i][0], callback_data=botoes_ajuda[i][1]),
+                InlineKeyboardButton(botoes_ajuda[i+1][0], callback_data=botoes_ajuda[i+1][1])
+            )
+    
+    markup.add(InlineKeyboardButton("📞 CONTATO DIRETO", url=f"https://t.me/{ADMIN_USERNAME}"))
+    markup.add(InlineKeyboardButton("🏠 VOLTAR AO INÍCIO", callback_data="inicio"))
+    
+    bot.reply_to(message, f"""
+🆘 *CENTRAL DE AJUDA - CINEMA PRO* 🆘
+
+📋 *COMANDOS DISPONÍVEIS:*
+
+🎬 *CATÁLOGO E PEDIDOS:*
+`/start` - Menu principal
+`/catalogo` - Catálogo completo
+`/buscar` - Buscar filme específico
+`/pedir` - Fazer pedido de filme
+`/trailer` - Ver trailers
+`/recomendacao` - Sugestão do dia
+
+💰 *CRÉDITOS E VIP:*
+`/creditos` - Ver seus créditos
+`/comprar` - Comprar créditos
+`/vip` - Ver planos VIP
+`/perfil` - Ver seu perfil
+
+📞 *SUPORTE:*
+`/ajuda` - Esta mensagem de ajuda
+`/suporte` - Falar com atendimento
+
+👑 *ADMIN:*
+`/admin` - Painel administrativo
+
+⚡ *EXEMPLOS PRÁTICOS:*
+• `/pedir Venom 3` - Pedir filme específico
+• `/buscar avatar` - Buscar filmes com "avatar"
+• `/comprar` - Comprar mais créditos
+
+💡 *DICAS RÁPIDAS:*
+• 1 crédito = 1 filme/série
+• Qualidade 4K garantida
+• Entrega em 15-30 minutos
+• Suporte 24/7 disponível
+
+🎯 *PRECISA DE AJUDA?*
+Clique nos botões abaixo ou fale diretamente com nosso suporte!
+    """, parse_mode='Markdown', reply_markup=markup)
+
+# 🎮 SISTEMA DE CALLBACKS COMPLETO
 @bot.callback_query_handler(func=lambda call: True)
-def handle_callbacks_avancados(call):
+def handle_callbacks(call):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     message_id = call.message.message_id
     
     try:
-        # 🏠 MENU PRINCIPAL
-        if call.data == 'menu_principal':
+        # 🏠 INÍCIO
+        if call.data == 'inicio':
             bot.delete_message(chat_id, message_id)
-            start_ultra(call.message)
+            start_comando(call.message)
         
         # 🎬 CATÁLOGO
-        elif call.data == 'menu_catalogo':
-            catalogo_avancado(call.message)
+        elif call.data == 'catalogo':
+            catalogo_comando(call.message)
         
-        # 💰 COMPRAR CRÉDITOS
-        elif call.data.startswith('comprar_'):
-            pacote = call.data.replace('comprar_', '')
-            precos = {'1': '20 MZN', '3': '50 MZN', '5': '80 MZN', '10': '150 MZN'}
-            creditos = {'1': '1 crédito', '3': '3 créditos', '5': '5 créditos', '10': '10 créditos'}
+        # 🚀 LANÇAMENTOS
+        elif call.data == 'lancamentos':
+            # Mostrar categoria de lançamentos
+            filmes = CATALOGO_PREMIUM.get('lancamentos_semana', [])
             
-            markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton(
-                "💳 REALIZAR PAGAMENTO",
-                url=f"https://t.me/{ADMIN_USERNAME}?text=Quero+comprar+{pacote}+créditos"
-            ))
-            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="menu_principal"))
+            if not filmes:
+                bot.answer_callback_query(call.id, "📭 Sem lançamentos no momento")
+                return
             
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text=f"""
-💎 *COMPRA DE CRÉDITOS CONFIRMADA* 💎
-
-📦 *PACOTE SELECIONADO:*
-• {creditos[pacote]}
-• Preço: {precos[pacote]}
-
-💰 *FORMAS DE PAGAMENTO:*
-• M-Pesa: `{CONTATOS['mpesa']}`
-• e-Mola: `{CONTATOS['emola']}`
-• PayPal: `{CONTATOS['paypal']}`
-
-📋 *PROCEDIMENTO:*
-1. Faça o pagamento
-2. Clique em "Realizar Pagamento"
-3. Envie o comprovante
-4. Aguarde confirmação (2-5min)
-
-🎁 *BÔNUS DISPONÍVEL:*
-• Primeira compra: +3 créditos
-• Compra acima de 50 MZN: +5%
-
-⚡ *CLIQUE ABAIXO PARA FINALIZAR:*
-                """,
-                parse_mode='Markdown',
-                reply_markup=markup
-            )
-        
-        # 👑 PLANOS VIP DETALHADOS
-        elif call.data == 'planos_vip_detalhado':
-            markup = InlineKeyboardMarkup()
+            markup = InlineKeyboardMarkup(row_width=1)
             
-            for plano_key, plano in PLANOS_VIP.items():
+            for filme in filmes:
                 markup.add(InlineKeyboardButton(
-                    f"{plano['nome']} - {plano['preco']}",
-                    url=f"https://t.me/{ADMIN_USERNAME}?text=Quero+{plano['nome'].replace(' ', '+')}"
+                    filme['titulo'],
+                    callback_data=f"detalhes_{filme['id']}"
                 ))
             
-            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="menu_principal"))
+            markup.add(InlineKeyboardButton("🏠 VOLTAR AO INÍCIO", callback_data="inicio"))
             
-            texto = "👑 *PLANOS VIP PREMIUM* 👑\n\n"
+            texto = "🚀 *LANÇAMENTOS DA SEMANA* 🚀\n\n"
+            texto += "🎬 *NOVOS FILMES DISPONÍVEIS:*\n\n"
             
-            for plano_key, plano in PLANOS_VIP.items():
-                texto += f"*{plano['nome']}*\n"
-                texto += f"💰 Preço: {plano['preco']} (De: {plano['preco_original']})\n"
-                texto += f"💎 Economia: {plano['economia']}\n"
-                texto += f"🎯 Créditos: {plano['creditos']}\n"
-                texto += f"📅 Duração: {plano['duracao']} dias\n\n"
-                
-                for vantagem in plano['vantagens'][:3]:
-                    texto += f"{vantagem}\n"
-                
-                texto += "\n"
+            for filme in filmes:
+                texto += f"• {filme['titulo']}\n"
+                texto += f"  ⭐ {filme['imdb']} • 🎭 {filme['genero']}\n"
+                texto += f"  ⏰ {filme['duracao']} • 💾 {filme['tamanho']}\n\n"
+            
+            texto += "💎 *Todos por apenas 1 crédito!*"
             
             bot.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
-                text=texto + "⚡ *Clique no plano desejado para assinar!*",
+                text=texto,
                 parse_mode='Markdown',
                 reply_markup=markup
             )
         
-        # 📊 DETALHES DE FILME
-        elif call.data.startswith('detalhes_'):
-            filme_id = call.data.replace('detalhes_', '')
-            filme_info = None
-            categoria_filme = None
+        # 💰 COMPRAR
+        elif call.data == 'comprar':
+            comprar_comando(call.message)
+        
+        # 👑 VIP
+        elif call.data == 'vip':
+            vip_comando(call.message)
+        
+        # 📊 PERFIL
+        elif call.data == 'perfil':
+            perfil_comando(call.message)
+        
+        # 🎥 TRAILERS
+        elif call.data == 'trailers':
+            trailers_comando(call.message)
+        
+        # ⭐ RECOMENDAÇÃO
+        elif call.data == 'recomendacao':
+            recomendacao_comando(call.message)
+        
+        # 🔍 BUSCAR
+        elif call.data == 'buscar':
+            bot.answer_callback_query(call.id, "🔍 Digite /buscar nome_do_filme")
+            bot.send_message(chat_id, "🔍 *Digite o nome do filme que deseja buscar:*\n\nExemplo: `/buscar avatar 4`", parse_mode='Markdown')
+        
+        # 📦 PEDIR FILME
+        elif call.data.startswith('pedir_'):
+            filme_id = call.data.replace('pedir_', '')
             
-            # Buscar filme em todas as categorias
-            for categoria, conteudos in CATALOGO_PREMIUM.items():
-                for conteudo in conteudos:
-                    if conteudo['id'] == filme_id:
-                        filme_info = conteudo
-                        categoria_filme = categoria
+            # Buscar filme
+            filme_info = None
+            for categoria, filmes in CATALOGO_PREMIUM.items():
+                for filme in filmes:
+                    if filme['id'] == filme_id:
+                        filme_info = filme
                         break
                 if filme_info:
                     break
             
-            if filme_info:
-                markup = InlineKeyboardMarkup(row_width=2)
+            if not filme_info:
+                bot.answer_callback_query(call.id, "❌ Filme não encontrado")
+                return
+            
+            # Verificar créditos
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT creditos, creditos_bonus FROM usuarios WHERE user_id = ?", (user_id,))
+            usuario = c.fetchone()
+            
+            if not usuario:
+                bot.answer_callback_query(call.id, "❌ Erro: use /start primeiro")
+                conn.close()
+                return
+            
+            creditos_total = usuario['creditos'] + usuario['creditos_bonus']
+            
+            if creditos_total < 1:
+                markup = InlineKeyboardMarkup()
                 markup.add(
-                    InlineKeyboardButton("🎬 PEDIR AGORA", callback_data=f"pedir_{filme_id}"),
-                    InlineKeyboardButton("🎥 VER TRAILER", callback_data=f"trailer_{filme_info['titulo'].split()[1]}")
+                    InlineKeyboardButton("💰 COMPRAR CRÉDITOS", callback_data="comprar"),
+                    InlineKeyboardButton("👑 VER VIP", callback_data="vip")
                 )
-                markup.add(
-                    InlineKeyboardButton("⭐ AVALIAR", callback_data=f"avaliar_{filme_id}"),
-                    InlineKeyboardButton("💾 SALVAR", callback_data=f"salvar_{filme_id}")
-                )
-                markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="menu_catalogo"))
                 
                 bot.edit_message_text(
                     chat_id=chat_id,
                     message_id=message_id,
                     text=f"""
+❌ *CRÉDITOS INSUFICIENTES*
+
+💎 *Seus créditos:* *{creditos_total}*
+🎬 *Filme desejado:* *{filme_info['titulo']}*
+
+⚡ *Você precisa de 1 crédito para fazer este pedido.*
+
+💫 *Clique abaixo para comprar créditos:*
+                    """,
+                    parse_mode='Markdown',
+                    reply_markup=markup
+                )
+                conn.close()
+                return
+            
+            # Processar pedido
+            if usuario['creditos'] >= 1:
+                c.execute("UPDATE usuarios SET creditos = creditos - 1 WHERE user_id = ?", (user_id,))
+            else:
+                creditos_necessarios = 1 - usuario['creditos']
+                c.execute("UPDATE usuarios SET creditos = 0, creditos_bonus = creditos_bonus - ? WHERE user_id = ?", 
+                         (creditos_necessarios, user_id))
+            
+            pedido_id = c.execute("""
+                INSERT INTO pedidos (user_id, username, filme_id, filme_titulo, status)
+                VALUES (?, ?, ?, ?, 'processando')
+            """, (user_id, call.from_user.username, filme_id, filme_info['titulo'])).lastrowid
+            
+            c.execute("UPDATE usuarios SET total_pedidos = total_pedidos + 1 WHERE user_id = ?", (user_id,))
+            
+            conn.commit()
+            conn.close()
+            
+            # Registrar log
+            registrar_log(user_id, "pedido_callback", f"Filme: {filme_info['titulo']}, ID: {pedido_id}")
+            
+            # Notificar admin
+            try:
+                admin_msg = f"""
+📦 *NOVO PEDIDO VIA BOTÃO* 📦
+
+🆔 *Pedido:* #{pedido_id}
+👤 *Usuário:* @{call.from_user.username} ({user_id})
+🎬 *Filme:* {filme_info['titulo']}
+💎 *Créditos usados:* 1
+⏰ *Data:* {datetime.now().strftime('%H:%M:%S')}
+
+⚡ *Status:* Processando
+                """
+                bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
+            except:
+                pass
+            
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton(
+                "📞 ACOMPANHAR PEDIDO",
+                url=f"https://t.me/{ADMIN_USERNAME}"
+            ))
+            markup.add(InlineKeyboardButton(
+                "🎬 NOVO PEDIDO",
+                callback_data="catalogo"
+            ))
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=f"""
+✅ *PEDIDO CONFIRMADO!* ✅
+
+🆔 *Pedido:* *#{pedido_id}*
+🎬 *Filme:* *{filme_info['titulo']}*
+💎 *Créditos utilizados:* 1
+💰 *Créditos restantes:* *{creditos_total - 1}*
+
+⏰ *Entrega em:* 15-30 minutos
+📦 *Qualidade:* 4K HDR garantida
+
+📞 *Para acompanhar:*
+Fale com @{ADMIN_USERNAME}
+
+⚡ *Obrigado pela preferência!*
+                """,
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 📋 DETALHES DO FILME
+        elif call.data.startswith('detalhes_'):
+            filme_id = call.data.replace('detalhes_', '')
+            
+            # Buscar filme
+            filme_info = None
+            for categoria, filmes in CATALOGO_PREMIUM.items():
+                for filme in filmes:
+                    if filme['id'] == filme_id:
+                        filme_info = filme
+                        break
+                if filme_info:
+                    break
+            
+            if not filme_info:
+                bot.answer_callback_query(call.id, "❌ Filme não encontrado")
+                return
+            
+            markup = InlineKeyboardMarkup(row_width=2)
+            markup.add(
+                InlineKeyboardButton("🎬 PEDIR AGORA (1 crédito)", callback_data=f"pedir_{filme_id}"),
+                InlineKeyboardButton("🎥 VER TRAILER", url=filme_info['link_trailer'])
+            )
+            
+            # Verificar créditos do usuário
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT creditos, creditos_bonus FROM usuarios WHERE user_id = ?", (user_id,))
+            usuario = c.fetchone()
+            creditos_total = (usuario['creditos'] + usuario['creditos_bonus']) if usuario else 0
+            conn.close()
+            
+            if creditos_total < 1:
+                markup.add(InlineKeyboardButton("💰 COMPRAR CRÉDITOS", callback_data="comprar"))
+            
+            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="catalogo"))
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=f"""
 🎬 *{filme_info['titulo']}* 🎬
+
+📖 *Sinopse:*
+{filme_info['descricao']}
 
 ⭐ *Avaliação IMDb:* {filme_info['imdb']}
 🎭 *Gênero:* {filme_info['genero']}
@@ -1432,215 +1719,225 @@ def handle_callbacks_avancados(call):
 🎯 *QUALIDADE:*
 {filme_info['qualidade']}
 
-🎤 *ELENCO:*
-{filme_info['elenco']}
-
-🎥 *DIREÇÃO:*
-{filme_info['diretor']}
-
-📖 *SINOPSE:*
-{filme_info['descricao']}
-
-🔊 *AUDIO:* {filme_info['audio']}
+🔊 *ÁUDIO:* {filme_info['audio']}
 📝 *LEGENDAS:* {filme_info['legendas']}
-📦 *FORMATO:* {filme_info['formato']}
 
 💎 *PREÇO:* 1 CRÉDITO
-⚡ *ENTREGA:* 5-15 minutos
-                    """,
-                    parse_mode='Markdown',
-                    reply_markup=markup
-                )
+💳 *Seus créditos:* *{creditos_total}*
+⚡ *ENTREGA:* 15-30 minutos
+
+🎯 *Clique em "Pedir Agora" para adquirir!*
+                """,
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
         
-        # 📦 PEDIR FILME
-        elif call.data.startswith('pedir_'):
-            filme_id = call.data.replace('pedir_', '')
+        # 🎬 CATEGORIAS
+        elif call.data.startswith('categoria_'):
+            categoria = call.data.replace('categoria_', '')
+            filmes = CATALOGO_PREMIUM.get(categoria, [])
             
-            # Buscar filme
+            if not filmes:
+                bot.answer_callback_query(call.id, "📭 Categoria vazia")
+                return
+            
+            # Nome da categoria
+            nomes_categorias = {
+                'acao_2025': '🎬 AÇÃO 2025',
+                'aventura_2025': '🌍 AVENTURA 2025',
+                'animacao_2025': '🎥 ANIMAÇÃO 2025',
+                'series_2025': '📺 SÉRIES 2025',
+                'animes_2025': '🎌 ANIMES 2025',
+                'terror_2025': '😨 TERROR 2025',
+                'brasileiros': '🇧🇷 BRASILEIROS',
+                'lancamentos_semana': '🚀 LANÇAMENTOS DA SEMANA'
+            }
+            
+            nome_categoria = nomes_categorias.get(categoria, categoria.replace('_', ' ').upper())
+            
+            markup = InlineKeyboardMarkup(row_width=1)
+            
+            for filme in filmes:
+                markup.add(InlineKeyboardButton(
+                    filme['titulo'],
+                    callback_data=f"detalhes_{filme['id']}"
+                ))
+            
+            markup.add(InlineKeyboardButton("🔙 VOLTAR AO CATÁLOGO", callback_data="catalogo"))
+            
+            texto = f"{nome_categoria}\n\n"
+            texto += f"📊 *{len(filmes)} FILMES/SÉRIES DISPONÍVEIS*\n\n"
+            
+            for filme in filmes:
+                texto += f"• {filme['titulo']}\n"
+                texto += f"  ⭐ {filme['imdb']} • ⏰ {filme['duracao']}\n\n"
+            
+            texto += "💎 *Todos por apenas 1 crédito cada!*\n"
+            texto += "🎯 *Clique em um título para ver detalhes e pedir*"
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=texto,
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 💰 PACOTES DE CRÉDITOS
+        elif call.data.startswith('pacote_'):
+            pacote = call.data.replace('pacote_', '')
+            
+            precos = {
+                '1': ('20 MZN', '1 crédito'),
+                '3': ('50 MZN', '3 créditos'),
+                '5': ('80 MZN', '5 créditos'),
+                '10': ('150 MZN', '10 créditos')
+            }
+            
+            if pacote not in precos:
+                bot.answer_callback_query(call.id, "❌ Pacote inválido")
+                return
+            
+            preco, descricao = precos[pacote]
+            
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton(
+                "💳 REALIZAR PAGAMENTO",
+                url=f"https://t.me/{ADMIN_USERNAME}?text=Quero+comprar+{pacote}+créditos"
+            ))
+            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="comprar"))
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=f"""
+💎 *COMPRA DE CRÉDITOS* 💎
+
+📦 *PACOTE SELECIONADO:*
+• {descricao}
+• Preço: {preco}
+
+💰 *FORMAS DE PAGAMENTO:*
+• M-Pesa: `{CONTATOS['mpesa']}`
+• e-Mola: `{CONTATOS['emola']}`
+• PayPal: `{CONTATOS['paypal']}`
+
+📋 *PROCEDIMENTO:*
+1. Faça o pagamento para um dos números acima
+2. Clique em "Realizar Pagamento"
+3. Envie o comprovante para @{ADMIN_USERNAME}
+4. Aguarde confirmação (2-5 minutos)
+
+🎁 *BÔNUS:*
+• Primeira compra: +3 créditos
+• Compra acima de 50 MZN: +5%
+
+⚡ *Clique abaixo para finalizar:*
+                """,
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 👑 PLANOS VIP DETALHADOS
+        elif call.data.startswith('plano_'):
+            plano_key = call.data.replace('plano_', '')
+            plano = PLANOS_VIP.get(plano_key)
+            
+            if not plano:
+                bot.answer_callback_query(call.id, "❌ Plano não encontrado")
+                return
+            
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton(
+                "👑 ASSINAR AGORA",
+                url=f"https://t.me/{ADMIN_USERNAME}?text=Quero+assinar+{plano['nome'].replace(' ', '+')}"
+            ))
+            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="vip"))
+            
+            texto = f"""
+{plano['nome']}
+
+💰 *Preço:* {plano['preco']}
+💎 *Créditos incluídos:* {plano['creditos']}
+
+🌟 *VANTAGENS EXCLUSIVAS:*
+"""
+            
+            for vantagem in plano['vantagens']:
+                texto += f"{vantagem}\n"
+            
+            texto += f"""
+            
+💳 *FORMAS DE PAGAMENTO:*
+• M-Pesa: `{CONTATOS['mpesa']}`
+• e-Mola: `{CONTATOS['emola']}`
+• PayPal: `{CONTATOS['paypal']}`
+
+📞 *PROCESSO:*
+1. Clique em "Assinar Agora"
+2. Faça o pagamento
+3. Envie comprovante
+4. Ativação em 5 minutos
+
+⚡ *Benefícios imediatos após ativação!*
+            """
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=texto,
+                parse_mode='Markdown',
+                reply_markup=markup
+            )
+        
+        # 🎥 TRAILERS ESPECÍFICOS
+        elif call.data.startswith('trailer_'):
+            trailer_key = call.data.replace('trailer_', '')
+            
+            # Mapear trailers
+            trailers_map = {
+                'venom3': ('VENOM 3: A ÚLTIMA BATALHA', 'https://youtu.be/venom3-trailer'),
+                'johnwick5': ('JOHN WICK 5: LEGADO', 'https://youtu.be/johnwick5-trailer'),
+                'avatar4': ('AVATAR 4: O LEGADO', 'https://youtu.be/avatar4-trailer'),
+                'spiderman': ('SPIDER-MAN: BEYOND', 'https://youtu.be/spiderman-trailer'),
+                'stranger5': ('STRANGER THINGS 5', 'https://youtu.be/stranger5-trailer'),
+                'demonslayer': ('DEMON SLAYER FINAL', 'https://youtu.be/demonslayer-trailer')
+            }
+            
+            if trailer_key not in trailers_map:
+                bot.answer_callback_query(call.id, "❌ Trailer não encontrado")
+                return
+            
+            titulo, url = trailers_map[trailer_key]
+            
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton("🎬 ASSISTIR NO YOUTUBE", url=url))
+            
+            # Tentar encontrar filme correspondente
             filme_info = None
-            for categoria, conteudos in CATALOGO_PREMIUM.items():
-                for conteudo in conteudos:
-                    if conteudo['id'] == filme_id:
-                        filme_info = conteudo
+            for categoria, filmes in CATALOGO_PREMIUM.items():
+                for filme in filmes:
+                    if trailer_key in filme['id']:
+                        filme_info = filme
                         break
                 if filme_info:
                     break
             
             if filme_info:
-                # Verificar créditos
-                conn = get_db()
-                c = conn.cursor()
-                c.execute("SELECT creditos, creditos_bonus FROM usuarios WHERE user_id = ?", (user_id,))
-                usuario = c.fetchone()
-                
-                creditos_total = (usuario['creditos'] or 0) + (usuario['creditos_bonus'] or 0)
-                
-                if creditos_total >= 1:
-                    # Processar pedido
-                    c.execute("""
-                        UPDATE usuarios SET 
-                        creditos = CASE 
-                            WHEN creditos >= 1 THEN creditos - 1
-                            ELSE 0
-                        END,
-                        creditos_bonus = CASE 
-                            WHEN creditos < 1 THEN creditos_bonus - (1 - creditos)
-                            ELSE creditos_bonus
-                        END,
-                        total_pedidos = total_pedidos + 1
-                        WHERE user_id = ?
-                    """, (user_id,))
-                    
-                    pedido_id = c.execute("""
-                        INSERT INTO pedidos 
-                        (user_id, username, filme_id, filme_titulo, categoria, qualidade, tamanho, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, 'processando')
-                    """, (user_id, call.from_user.username, filme_id, filme_info['titulo'], 
-                          categoria_filme, filme_info['qualidade'], filme_info['tamanho']))
-                    
-                    conn.commit()
-                    pedido_id = c.lastrowid
-                    conn.close()
-                    
-                    # Notificar admin
-                    try:
-                        admin_msg = f"""
-📦 *NOVO PEDIDO VIP* 📦
-
-🆔 *Pedido:* #{pedido_id}
-👤 *Usuário:* @{call.from_user.username} ({user_id})
-🎬 *Filme:* {filme_info['titulo']}
-💎 *Créditos usados:* 1
-⏰ *Data:* {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
-
-⚡ *Detalhes:*
-• Qualidade: {filme_info['qualidade']}
-• Tamanho: {filme_info['tamanho']}
-• Categoria: {categoria_filme}
-
-🎯 *ENTREGAR O MAIS RÁPIDO POSSÍVEL!*
-                        """
-                        bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
-                    except:
-                        pass
-                    
-                    markup = InlineKeyboardMarkup()
-                    markup.add(InlineKeyboardButton(
-                        "📞 ACOMPANHAR PEDIDO",
-                        url=f"https://t.me/{ADMIN_USERNAME}"
-                    ))
-                    markup.add(InlineKeyboardButton(
-                        "🎬 FAZER NOVO PEDIDO",
-                        callback_data="menu_catalogo"
-                    ))
-                    
-                    bot.edit_message_text(
-                        chat_id=chat_id,
-                        message_id=message_id,
-                        text=f"""
-✅ *PEDIDO CONFIRMADO COM SUCESSO!* ✅
-
-🆔 *Nº do Pedido:* *#{pedido_id}*
-🎬 *Filme:* *{filme_info['titulo']}*
-💎 *Créditos utilizados:* 1
-💰 *Créditos restantes:* *{creditos_total - 1}*
-
-⚡ *INFORMAÇÕES:*
-• Qualidade: {filme_info['qualidade']}
-• Formato: {filme_info['formato']}
-• Tamanho: {filme_info['tamanho']}
-• Áudio: {filme_info['audio']}
-
-⏰ *TEMPO DE ENTREGA:*
-• Normal: 15-30 minutos
-• VIP: 5-15 minutos
-• Prioritário: 2-5 minutos (usuários VIP)
-
-📦 *MÉTODO DE ENTREGA:*
-• Google Drive (recomendado)
-• Mega.nz
-• MediaFire
-• Link direto (HTTP)
-
-📞 *ACOMPANHAMENTO:*
-Entre em contato com @{ADMIN_USERNAME} para:
-• Status do pedido
-• Problemas com download
-• Qualidade insatisfatória
-
-⭐ *APÓS RECEBER:*
-Avalie o filme para ganhar créditos bônus!
-
-🎯 *OBRIGADO PELA PREFERÊNCIA!*
-                        """,
-                        parse_mode='Markdown',
-                        reply_markup=markup
-                    )
-                else:
-                    markup = InlineKeyboardMarkup()
-                    markup.add(
-                        InlineKeyboardButton("💎 COMPRAR CRÉDITOS", callback_data="comprar_creditos"),
-                        InlineKeyboardButton("👑 ASSINAR VIP", callback_data="planos_vip")
-                    )
-                    
-                    bot.edit_message_text(
-                        chat_id=chat_id,
-                        message_id=message_id,
-                        text=f"""
-❌ *CRÉDITOS INSUFICIENTES* ❌
-
-💎 *Seus créditos:* *{creditos_total}*
-🎬 *Filme desejado:* *{filme_info['titulo']}*
-
-⚡ *VOCÊ PRECISA DE 1 CRÉDITO*
-
-🎯 *OPÇÕES DISPONÍVEIS:*
-1. Comprar créditos avulsos
-2. Assinar plano VIP (mais econômico)
-3. Participar de promoções
-4. Indicar amigos para ganhar créditos
-
-💰 *PACOTE MAIS POPULAR:*
-• 3 Créditos - 50 MZN
-• 5 Créditos - 80 MZN (Recomendado)
-
-👑 *VIP RECOMENDADO:*
-• 15 créditos por 50 MZN/mês
-• Entrega prioritária
-• Conteúdo exclusivo
-
-🎁 *Ganhe créditos grátis!*
-                        """,
-                        parse_mode='Markdown',
-                        reply_markup=markup
-                    )
-                    conn.close()
-        
-        # 🎥 VER TRAILER
-        elif call.data.startswith('trailer_'):
-            filme_nome = call.data.replace('trailer_', '')
-            trailer_info = TRAILERS_DISPONIVEIS.get(filme_nome)
-            
-            if trailer_info:
-                markup = InlineKeyboardMarkup()
-                markup.add(InlineKeyboardButton(
-                    "🎬 ASSISTIR NO YOUTUBE",
-                    url=trailer_info['url']
-                ))
                 markup.add(InlineKeyboardButton(
                     "📦 PEDIR FILME COMPLETO",
-                    callback_data=f"pedir_{filme_nome.lower().replace(' ', '_')}"
+                    callback_data=f"pedir_{filme_info['id']}"
                 ))
-                
-                bot.edit_message_text(
-                    chat_id=chat_id,
-                    message_id=message_id,
-                    text=f"""
+            
+            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="trailers"))
+            
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=f"""
 🎬 *TRAILER EXCLUSIVO* 🎬
 
-📽️ *Filme:* {filme_nome}
-⏰ *Duração:* {trailer_info['duracao']}
-⚡ *Detalhes:* {trailer_info['detalhes']}
+📽️ *Filme:* {titulo}
 
 🎯 *VERSÃO COMPLETA INCLUI:*
 • Qualidade 4K HDR/Dolby Vision
@@ -1648,285 +1945,29 @@ Avalie o filme para ganhar créditos bônus!
 • Download direto via Google Drive
 • Garantia de qualidade cinema
 
-💎 *PREÇO: 1 CRÉDITO*
-⚡ *Entrega: 5-15 minutos*
+💎 *PREÇO:* 1 CRÉDITO
+⚡ *Entrega:* 15-30 minutos
 
 📊 *ESTATÍSTICAS:*
 • 98% satisfação dos clientes
 • 4.8/5 ⭐ Avaliação média
 • +1000 pedidos realizados
 
-💡 *ASSISTA O TRAILER E DEPOIS PEÇA O FILME COMPLETO!*
-                    """,
-                    parse_mode='Markdown',
-                    reply_markup=markup
-                )
-        
-        # 📋 COMANDOS AVANÇADOS
-        elif call.data == 'comandos_avancados':
-            markup = InlineKeyboardMarkup(row_width=2)
-            
-            categorias_comandos = [
-                ("🎬 CATÁLOGO", """
-`/catalogo` - Catálogo completo
-`/buscar` - Buscar filme/série
-`/filme` - Detalhes do filme
-`/serie` - Detalhes da série
-`/lancamentos` - Novidades
-`/recomendacao` - Sugestão do dia
-                """),
-                ("💰 CRÉDITOS", """
-`/creditos` - Ver saldo
-`/comprar` - Comprar créditos
-`/vip` - Planos VIP
-`/recarregar` - Recarregar saldo
-`/bonus` - Ver bônus
-                """),
-                ("👤 PERFIL", """
-`/perfil` - Meu perfil
-`/historico` - Histórico
-`/config` - Configurações
-`/notificacoes` - Gerenciar notificações
-`/preferencias` - Preferências
-                """),
-                ("🎮 UTILIDADES", """
-`/trailer` - Ver trailers
-`/avaliar` - Avaliar conteúdo
-`/salvar` - Salvar para depois
-`/lista` - Minha lista
-`/ajuda` - Ajuda completa
-                """),
-                ("📞 SUPORTE", """
-`/suporte` - Falar com suporte
-`/reportar` - Reportar problema
-`/sugerir` - Sugerir filme
-`/duvidas` - Dúvidas frequentes
-`/contato` - Contato direto
-                """),
-                ("👑 ADMIN", """
-`/admin` - Painel admin
-`/estatisticas` - Estatísticas
-`/usuarios` - Gerenciar usuários
-`/pedidos` - Ver pedidos
-`/configsys` - Configurar sistema
-                """)
-            ]
-            
-            texto = "📋 *COMANDOS AVANÇADOS - CINEMA PRO ULTRA*\n\n"
-            
-            for categoria, comandos in categorias_comandos:
-                texto += f"*{categoria}:*\n"
-                texto += f"{comandos}\n"
-            
-            texto += """
-⚡ *EXEMPLOS PRÁTICOS:*
-• `/buscar avatar 4` - Buscar filme específico
-• `/pedir venom 3` - Pedir filme
-• `/trailer john wick` - Ver trailer
-• `/perfil` - Ver suas estatísticas
-
-💡 *DICAS RÁPIDAS:*
-• Use `/` para ver todos os comandos
-• Mantenha seu perfil atualizado
-• Avalie os filmes para ganhar créditos
-• Siga nossos canais para promoções
-
-🎯 *PRECISA DE AJUDA?*
-@{} - Suporte 24/7
-            """.format(ADMIN_USERNAME)
-            
-            markup.add(InlineKeyboardButton("🏠 INÍCIO", callback_data="menu_principal"))
-            markup.add(InlineKeyboardButton("📞 SUPORTE", url=f"https://t.me/{ADMIN_USERNAME}"))
-            
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text=texto,
-                parse_mode='Markdown',
-                reply_markup=markup
-            )
-        
-        # 🎁 SISTEMA DE RECOMPENSAS
-        elif call.data == 'recompensas':
-            markup = InlineKeyboardMarkup(row_width=2)
-            
-            # Lista de recompensas
-            recompensas_lista = [
-                ("👥 INDICAR AMIGOS", "recompensa_indicar"),
-                ("⭐ AVALIAR 5 ESTRELAS", "recompensa_avaliar"),
-                ("🎬 PRIMEIRO PEDIDO", "recompensa_primeiro"),
-                ("📅 FREQUÊNCIA DIÁRIA", "recompensa_diaria"),
-                ("🎉 ANIVERSÁRIO", "recompensa_aniversario"),
-                ("🏆 META MENSAL", "recompensa_meta")
-            ]
-            
-            for i in range(0, len(recompensas_lista), 2):
-                if i+1 < len(recompensas_lista):
-                    markup.add(
-                        InlineKeyboardButton(recompensas_lista[i][0], callback_data=recompensas_lista[i][1]),
-                        InlineKeyboardButton(recompensas_lista[i+1][0], callback_data=recompensas_lista[i+1][1])
-                    )
-            
-            markup.add(InlineKeyboardButton("🏠 INÍCIO", callback_data="menu_principal"))
-            
-            # Calcular recompensas disponíveis
-            conn = get_db()
-            c = conn.cursor()
-            c.execute("SELECT creditos_bonus FROM usuarios WHERE user_id = ?", (user_id,))
-            creditos_bonus = c.fetchone()['creditos_bonus'] or 0
-            conn.close()
-            
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text=f"""
-🎁 *SISTEMA DE RECOMPENSAS* 🎁
-
-💰 *CRÉDITOS BÔNUS DISPONÍVEIS:* *{creditos_bonus}*
-
-🏆 *RECOMPENSAS ATIVAS:*
-
-👥 *INDICAR AMIGOS*
-• 2 créditos por amigo cadastrado
-• Máximo: 10 créditos/dia
-• Link exclusivo disponível
-
-⭐ *AVALIAR COM 5 ESTRELAS*
-• 5 créditos por avaliação
-• Envie print da avaliação
-• Válido uma vez por semana
-
-🎬 *PRIMEIRO PEDIDO DO DIA*
-• 1 crédito extra
-• Válido todos os dias
-• Automático após pedido
-
-📅 *LOGIN DIÁRIO*
-• 1 crédito por 7 dias seguidos
-• 3 créditos por 30 dias
-• Streak de recompensas
-
-🎉 *ANIVERSÁRIO*
-• 10 créditos no seu aniversário
-• Configure sua data de nascimento
-• Presente especial
-
-🏆 *META MENSAL*
-• 5 créditos por 10 pedidos/mês
-• 15 créditos por 30 pedidos/mês
-• 30 créditos por 50 pedidos/mês
-
-⚡ *COMO RESGATAR:*
-1. Complete a tarefa
-2. Clique na recompensa
-3. Siga as instruções
-4. Receba os créditos
-
-📈 *ESTATÍSTICAS DO MÊS:*
-• Recompensas ganhas: 0
-• Créditos totais: {creditos_bonus}
-• Próxima meta: 10 créditos
-
-🎯 *ESCOLHA UMA RECOMPENSA:*
+💡 *Assista o trailer e depois peça o filme completo!*
                 """,
                 parse_mode='Markdown',
                 reply_markup=markup
             )
         
-        # 📊 PAINEL ADMIN AVANÇADO
-        elif call.data == 'painel_admin':
+        # 👑 ADMIN CALLBACKS
+        elif call.data == 'admin':
             if not is_admin(user_id, call.from_user.username):
-                bot.answer_callback_query(call.id, "❌ Acesso restrito a administradores!")
+                bot.answer_callback_query(call.id, "❌ Acesso negado!")
                 return
             
-            markup = InlineKeyboardMarkup(row_width=2)
-            
-            modulos_admin = [
-                ("📊 ESTATÍSTICAS", "admin_stats_full"),
-                ("👥 USUÁRIOS", "admin_users_manage"),
-                ("💰 FINANCEIRO", "admin_financeiro"),
-                ("📦 PEDIDOS", "admin_pedidos_full"),
-                ("📢 MARKETING", "admin_marketing"),
-                ("⚙️ SISTEMA", "admin_sistema"),
-                ("🔧 MANUTENÇÃO", "admin_manutencao"),
-                ("📈 RELATÓRIOS", "admin_relatorios")
-            ]
-            
-            for i in range(0, len(modulos_admin), 2):
-                if i+1 < len(modulos_admin):
-                    markup.add(
-                        InlineKeyboardButton(modulos_admin[i][0], callback_data=modulos_admin[i][1]),
-                        InlineKeyboardButton(modulos_admin[i+1][0], callback_data=modulos_admin[i+1][1])
-                    )
-            
-            markup.add(InlineKeyboardButton("🏠 INÍCIO", callback_data="menu_principal"))
-            
-            # Buscar estatísticas rápidas
-            conn = get_db()
-            c = conn.cursor()
-            
-            total_usuarios = c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
-            total_pedidos = c.execute("SELECT COUNT(*) FROM pedidos").fetchone()[0]
-            pedidos_hoje = c.execute("SELECT COUNT(*) FROM pedidos WHERE DATE(data_pedido) = DATE('now')").fetchone()[0]
-            receita_mes = c.execute("SELECT SUM(valor) FROM transacoes WHERE status = 'aprovado' AND strftime('%m', data) = strftime('%m', 'now')").fetchone()[0] or 0
-            vip_ativos = c.execute("SELECT COUNT(*) FROM usuarios WHERE vip = 1 AND vip_expira >= DATE('now')").fetchone()[0]
-            
-            conn.close()
-            
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text=f"""
-👑 *PAINEL ADMIN ULTRA - CINEMA PRO* 👑
-
-📊 *VISÃO GERAL:*
-• 👥 Total Usuários: `{total_usuarios}`
-• 📦 Total Pedidos: `{total_pedidos}`
-• 🚀 Pedidos Hoje: `{pedidos_hoje}`
-• 💰 Receita Mês: `{receita_mes:.2f} MZN`
-• 👑 VIPs Ativos: `{vip_ativos}`
-• 🟢 Sistema: *OPERACIONAL*
-
-📈 *TENDÊNCIAS:*
-• Crescimento usuários: +15% (7 dias)
-• Taxa de conversão: 68%
-• Satisfação: 99.8%
-• Tempo resposta: 8.2min
-
-⚡ *MÓDULOS DISPONÍVEIS:*
-
-📊 *ESTATÍSTICAS*
-Análise detalhada de dados e métricas
-
-👥 *GERENCIAR USUÁRIOS*
-Adicionar créditos, VIP, bloquear
-
-💰 *FINANCEIRO*
-Transações, relatórios, pagamentos
-
-📦 *PEDIDOS*
-Gerenciar, processar, entregar
-
-📢 *MARKETING*
-Promoções, campanhas, anúncios
-
-⚙️ *SISTEMA*
-Configurações, backups, logs
-
-🔧 *MANUTENÇÃO*
-Limpeza, otimização, reparos
-
-📈 *RELATÓRIOS*
-Relatórios personalizados, exportação
-
-🎯 *SELECIONE UM MÓDULO:*
-                """,
-                parse_mode='Markdown',
-                reply_markup=markup
-            )
+            admin_comando(call.message)
         
-        # 📊 ESTATÍSTICAS DETALHADAS
-        elif call.data == 'admin_stats_full':
+        elif call.data == 'admin_stats':
             if not is_admin(user_id, call.from_user.username):
                 return
             
@@ -1934,68 +1975,52 @@ Relatórios personalizados, exportação
             c = conn.cursor()
             
             # Estatísticas detalhadas
-            estatisticas = {
-                'usuarios': {
-                    'total': c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0],
-                    'novos_24h': c.execute("SELECT COUNT(*) FROM usuarios WHERE datetime(data_cadastro) > datetime('now', '-1 day')").fetchone()[0],
-                    'ativos_24h': c.execute("SELECT COUNT(*) FROM usuarios WHERE datetime(ultimo_login) > datetime('now', '-1 day')").fetchone()[0],
-                    'vip': c.execute("SELECT COUNT(*) FROM usuarios WHERE vip = 1").fetchone()[0]
-                },
-                'pedidos': {
-                    'total': c.execute("SELECT COUNT(*) FROM pedidos").fetchone()[0],
-                    'hoje': c.execute("SELECT COUNT(*) FROM pedidos WHERE DATE(data_pedido) = DATE('now')").fetchone()[0],
-                    'pendentes': c.execute("SELECT COUNT(*) FROM pedidos WHERE status = 'pendente'").fetchone()[0],
-                    'entregues': c.execute("SELECT COUNT(*) FROM pedidos WHERE status = 'entregue'").fetchone()[0]
-                },
-                'financeiro': {
-                    'receita_total': c.execute("SELECT SUM(valor) FROM transacoes WHERE status = 'aprovado'").fetchone()[0] or 0,
-                    'receita_mes': c.execute("SELECT SUM(valor) FROM transacoes WHERE status = 'aprovado' AND strftime('%m', data) = strftime('%m', 'now')").fetchone()[0] or 0,
-                    'receita_hoje': c.execute("SELECT SUM(valor) FROM transacoes WHERE status = 'aprovado' AND DATE(data) = DATE('now')").fetchone()[0] or 0
-                },
-                'conteudo': {
-                    'filmes_mais_pedidos': c.execute("SELECT filme_titulo, COUNT(*) as total FROM pedidos GROUP BY filme_titulo ORDER BY total DESC LIMIT 5").fetchall(),
-                    'categoria_popular': c.execute("SELECT categoria, COUNT(*) as total FROM pedidos GROUP BY categoria ORDER BY total DESC LIMIT 1").fetchone()
-                }
-            }
+            total_usuarios = c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
+            novos_24h = c.execute("SELECT COUNT(*) FROM usuarios WHERE datetime(data_cadastro) > datetime('now', '-1 day')").fetchone()[0]
+            ativos_24h = c.execute("SELECT COUNT(*) FROM usuarios WHERE datetime(ultimo_login) > datetime('now', '-1 day')").fetchone()[0]
+            
+            total_pedidos = c.execute("SELECT COUNT(*) FROM pedidos").fetchone()[0]
+            pedidos_hoje = c.execute("SELECT COUNT(*) FROM pedidos WHERE DATE(data_pedido) = DATE('now')").fetchone()[0]
+            pedidos_entregues = c.execute("SELECT COUNT(*) FROM pedidos WHERE status = 'entregue'").fetchone()[0]
+            
+            receita_total = c.execute("SELECT SUM(valor) FROM transacoes WHERE tipo = 'compra_creditos' AND status = 'aprovado'").fetchone()[0] or 0
+            receita_hoje = c.execute("SELECT SUM(valor) FROM transacoes WHERE tipo = 'compra_creditos' AND status = 'aprovado' AND DATE(data) = DATE('now')").fetchone()[0] or 0
+            
+            # Filmes mais populares
+            c.execute("""
+                SELECT filme_titulo, COUNT(*) as total 
+                FROM pedidos 
+                GROUP BY filme_titulo 
+                ORDER BY total DESC 
+                LIMIT 5
+            """)
+            filmes_populares = c.fetchall()
             
             conn.close()
             
-            # Formatando texto
-            texto = "📊 *ESTATÍSTICAS DETALHADAS DO SISTEMA*\n\n"
+            texto = "📊 *ESTATÍSTICAS DETALHADAS*\n\n"
             
             texto += "👥 *USUÁRIOS:*\n"
-            texto += f"• Total: `{estatisticas['usuarios']['total']}`\n"
-            texto += f"• Novos (24h): `{estatisticas['usuarios']['novos_24h']}`\n"
-            texto += f"• Ativos (24h): `{estatisticas['usuarios']['ativos_24h']}`\n"
-            texto += f"• VIPs: `{estatisticas['usuarios']['vip']}`\n\n"
+            texto += f"• Total: `{total_usuarios}`\n"
+            texto += f"• Novos (24h): `{novos_24h}`\n"
+            texto += f"• Ativos (24h): `{ativos_24h}`\n\n"
             
             texto += "📦 *PEDIDOS:*\n"
-            texto += f"• Total: `{estatisticas['pedidos']['total']}`\n"
-            texto += f"• Hoje: `{estatisticas['pedidos']['hoje']}`\n"
-            texto += f"• Pendentes: `{estatisticas['pedidos']['pendentes']}`\n"
-            texto += f"• Entregues: `{estatisticas['pedidos']['entregues']}`\n"
-            texto += f"• Taxa entrega: `{(estatisticas['pedidos']['entregues']/max(estatisticas['pedidos']['total'],1)*100):.1f}%`\n\n"
+            texto += f"• Total: `{total_pedidos}`\n"
+            texto += f"• Hoje: `{pedidos_hoje}`\n"
+            texto += f"• Entregues: `{pedidos_entregues}`\n"
+            texto += f"• Taxa entrega: `{(pedidos_entregues/max(total_pedidos,1)*100):.1f}%`\n\n"
             
             texto += "💰 *FINANCEIRO:*\n"
-            texto += f"• Receita total: `{estatisticas['financeiro']['receita_total']:.2f} MZN`\n"
-            texto += f"• Receita mês: `{estatisticas['financeiro']['receita_mes']:.2f} MZN`\n"
-            texto += f"• Receita hoje: `{estatisticas['financeiro']['receita_hoje']:.2f} MZN`\n\n"
+            texto += f"• Receita total: `{receita_total:.2f} MZN`\n"
+            texto += f"• Receita hoje: `{receita_hoje:.2f} MZN`\n\n"
             
-            texto += "🎬 *CONTEÚDO MAIS POPULAR:*\n"
-            for filme in estatisticas['conteudo']['filmes_mais_pedidos']:
-                texto += f"• {filme[0]}: `{filme[1]}` pedidos\n"
-            
-            if estatisticas['conteudo']['categoria_popular']:
-                texto += f"\n🏆 *Categoria mais pedida:* `{estatisticas['conteudo']['categoria_popular'][0]}`\n"
-            
-            texto += f"\n📈 *CRESCIMENTO MÉDIO:*\n"
-            texto += "• Usuários: +5%/dia\n"
-            texto += "• Pedidos: +8%/dia\n"
-            texto += "• Receita: +12%/dia\n"
+            texto += "🎬 *FILMES MAIS POPULARES:*\n"
+            for filme in filmes_populares:
+                texto += f"• {filme['filme_titulo']}: `{filme['total']}` pedidos\n"
             
             markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton("📤 EXPORTAR DADOS", callback_data="admin_exportar"))
-            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="painel_admin"))
+            markup.add(InlineKeyboardButton("🔙 VOLTAR", callback_data="admin"))
             
             bot.edit_message_text(
                 chat_id=chat_id,
@@ -2005,256 +2030,224 @@ Relatórios personalizados, exportação
                 reply_markup=markup
             )
         
-        # 🔄 ATUALIZAR VERIFICAÇÃO DE CANAIS
-        elif call.data == 'verificar_canais':
-            verificado, markup_canais = verificar_canais(user_id)
-            
-            if verificado:
-                bot.answer_callback_query(call.id, "✅ Verificação concluída!")
-                start_ultra(call.message)
-            else:
-                bot.answer_callback_query(call.id, "❌ Ainda não entrou em todos os canais!")
-                bot.edit_message_reply_markup(chat_id, message_id, reply_markup=markup_canais)
+        elif call.data == 'fechar_admin':
+            if is_admin(user_id, call.from_user.username):
+                bot.delete_message(chat_id, message_id)
         
-        # 🏠 MENU SIMPLES
-        elif call.data == 'menu_principal':
-            start_ultra(call.message)
+        # 📞 AJUDA ESPECÍFICA
+        elif call.data.startswith('ajuda_'):
+            topico = call.data.replace('ajuda_', '')
+            
+            textos_ajuda = {
+                'pedir': """
+🎬 *COMO FAZER UM PEDIDO*
+
+⚡ *PASSO A PASSO:*
+1. Use `/catalogo` para ver as opções
+2. Escolha um filme/série
+3. Use `/pedir NomeDoFilme`
+4. Confirme com 1 crédito
+5. Receba o link em 15-30 minutos
+
+💡 *EXEMPLOS:*
+• `/pedir Venom 3`
+• `/pedir Stranger Things 5`
+• `/pedir Demon Slayer`
+
+🎯 *DICAS:*
+• Verifique seus créditos com `/creditos`
+• 1 crédito = 1 filme/série
+• Qualidade 4K garantida
+                """,
+                'comprar': """
+💰 *COMO COMPRAR CRÉDITOS*
+
+⚡ *OPÇÕES DISPONÍVEIS:*
+• 1 Crédito - 20 MZN
+• 3 Créditos - 50 MZN
+• 5 Créditos - 80 MZN
+• 10 Créditos - 150 MZN
+
+💳 *PROCESSO:*
+1. Use `/comprar` ou clique em Comprar Créditos
+2. Escolha seu pacote
+3. Faça o pagamento via M-Pesa/e-Mola/PayPal
+4. Envie comprovante para @{}
+5. Receba créditos em 2-5 minutos
+
+🎁 *BÔNUS:*
+• Primeira compra: +3 créditos
+• Compra acima de 50 MZN: +5%
+                """.format(ADMIN_USERNAME),
+                'vip': """
+👑 *PLANOS VIP*
+
+🌟 *VANTAGENS:*
+• Mais créditos por menos dinheiro
+• Entrega prioritária (5-15min)
+• Suporte VIP 24/7
+• Lançamentos antecipados
+• Catálogo exclusivo
+
+💎 *PLANOS:*
+• VIP 1 Mês: 50 MZN (15 créditos)
+• VIP 3 Meses: 120 MZN (50 créditos)
+• VIP 6 Meses: 200 MZN (120 créditos)
+• VIP Anual: 350 MZN (300 créditos)
+
+⚡ *Para assinar:* Use `/vip` ou fale com @{}
+                """.format(ADMIN_USERNAME),
+                'suporte': """
+📞 *SUPORTE AO CLIENTE*
+
+🎯 *CANAL DE ATENDIMENTO:*
+• Telegram: @{}
+• WhatsApp: {}
+• Email: {}
+
+⏰ *HORÁRIO DE ATENDIMENTO:*
+• 24 horas por dia
+• 7 dias por semana
+
+⚡ *TIPOS DE SUPORTE:*
+• Dúvidas sobre pedidos
+• Problemas com pagamentos
+• Reclamações
+• Sugestões
+• Parcerias
+                """.format(ADMIN_USERNAME, CONTATOS['whatsapp'], CONTATOS['email']),
+                'problemas': """
+⚙️ *PROBLEMAS COMUNS*
+
+🔍 *NÃO CONSIGO FAZER PEDIDO:*
+• Verifique seus créditos com `/creditos`
+• Compre mais créditos com `/comprar`
+• Certifique-se de escrever o nome correto
+
+📦 *NÃO RECEBI MEU PEDIDO:*
+• Aguarde 15-30 minutos
+• Entre em contato com @{}
+• Forneça o número do pedido
+
+💳 *PROBLEMAS COM PAGAMENTO:*
+• Envie comprovante para @{}
+• Aguarde 5 minutos para confirmação
+• Em caso de atraso, entre em contato
+
+🎬 *PROBLEMAS COM O ARQUIVO:*
+• Verifique sua conexão de internet
+• Tente baixar novamente
+• Entre em contato para reenvio
+                """.format(ADMIN_USERNAME, ADMIN_USERNAME),
+                'termos': """
+📋 *TERMOS DE USO*
+
+✅ *PERMITIDO:*
+• Uso pessoal dos conteúdos
+• Compartilhamento com familiares
+• Armazenamento para uso offline
+
+❌ *PROIBIDO:*
+• Revenda dos conteúdos
+• Distribuição comercial
+• Upload em sites públicos
+• Compartilhamento em massa
+
+⚖️ *RESPONSABILIDADES:*
+• Os conteúdos são para uso pessoal
+• Não nos responsabilizamos por uso indevido
+• Reserve os direitos dos distribuidores
+
+🔒 *PRIVACIDADE:*
+• Seus dados são mantidos em sigilo
+• Não compartilhamos informações
+• Sistema seguro e criptografado
+                """
+            }
+            
+            if topico in textos_ajuda:
+                markup = InlineKeyboardMarkup()
+                markup.add(InlineKeyboardButton("📞 FALAR COM SUPORTE", url=f"https://t.me/{ADMIN_USERNAME}"))
+                markup.add(InlineKeyboardButton("🔙 VOLTAR À AJUDA", callback_data="ajuda"))
+                
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text=textos_ajuda[topico],
+                    parse_mode='Markdown',
+                    reply_markup=markup
+                )
+        
+        elif call.data == 'ajuda':
+            ajuda_comando(call.message)
         
         else:
             bot.answer_callback_query(call.id, "⚡ Função em desenvolvimento!")
     
     except Exception as e:
-        print(f"❌ Erro callback: {e}")
+        print(f"❌ Erro no callback: {e}")
         bot.answer_callback_query(call.id, "❌ Erro, tente novamente")
 
-# 🌐 WEBHOOK E SERVIDOR
-@app.route('/')
-def home():
-    return """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>🎬 CINEMA PRO ULTRA - SISTEMA PREMIUM</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-            padding: 50px;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 800px;
-            margin: 0 auto;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-        h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .status {
-            background: rgba(0, 255, 0, 0.2);
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-            font-size: 1.2em;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin: 30px 0;
-        }
-        .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            transition: transform 0.3s;
-        }
-        .stat-box:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .bot-link {
-            display: inline-block;
-            background: #25D366;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-size: 1.2em;
-            margin-top: 30px;
-            transition: background 0.3s;
-        }
-        .bot-link:hover {
-            background: #128C7E;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🎬 CINEMA PRO ULTRA</h1>
-        <div class="status">
-            ✅ SISTEMA OPERACIONAL - STATUS: ONLINE
-        </div>
-        
-        <p>Sistema premium de distribuição de filmes e séries em 4K HDR.</p>
-        
-        <div class="stats">
-            <div class="stat-box">
-                <h3>📊 USUÁRIOS</h3>
-                <p>Carregando...</p>
-            </div>
-            <div class="stat-box">
-                <h3>🎬 FILMES</h3>
-                <p>50+ Títulos</p>
-            </div>
-            <div class="stat-box">
-                <h3>⚡ ENTREGA</h3>
-                <p>5-15 minutos</p>
-            </div>
-        </div>
-        
-        <a href="https://t.me/cinemaproultra_bot" class="bot-link">
-            🚀 ACESSAR BOT NO TELEGRAM
-        </a>
-        
-        <div style="margin-top: 40px; font-size: 0.9em; opacity: 0.8;">
-            <p>© 2025 CINEMA PRO ULTRA - Todos os direitos reservados</p>
-            <p>Sistema desenvolvido com Python + Flask + SQLite</p>
-        </div>
-    </div>
-    
-    <script>
-        // Atualizar estatísticas em tempo real
-        async function atualizarStats() {
-            try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                
-                document.querySelector('.stats .stat-box:nth-child(1) p').textContent = 
-                    data.total_usuarios + ' Ativos';
-            } catch (error) {
-                console.log('Erro ao carregar estatísticas');
-            }
-        }
-        
-        // Atualizar a cada 30 segundos
-        setInterval(atualizarStats, 30000);
-        atualizarStats();
-    </script>
-</body>
-</html>
-    """
+# 📨 SISTEMA DE GRUPOS
+@bot.message_handler(content_types=['new_chat_members'])
+def welcome_group(message):
+    for member in message.new_chat_members:
+        if member.username == bot.get_me().username:
+            group_id = message.chat.id
+            group_title = message.chat.title
+            
+            welcome_msg = f"""
+🎬 *CINEMA PRO ADICIONADO AO GRUPO!* 🎬
 
-@app.route('/api/stats')
-def api_stats():
-    conn = get_db()
-    c = conn.cursor()
-    
-    total_usuarios = c.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
-    pedidos_hoje = c.execute("SELECT COUNT(*) FROM pedidos WHERE DATE(data_pedido) = DATE('now')").fetchone()[0]
-    
-    conn.close()
-    
-    return {
-        'total_usuarios': total_usuarios,
-        'pedidos_hoje': pedidos_hoje,
-        'status': 'online',
-        'timestamp': datetime.now().isoformat()
-    }
+Olá *{group_title}*! 🤖
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return 'OK'
-    return 'ERROR'
+Estou aqui para facilitar seus pedidos de filmes e séries em 4K!
 
-# 🚀 INICIALIZAÇÃO DO SISTEMA
-def inicializar_sistema():
-    print("""
-    🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬
-    🎬                                        🎬
-    🎬     CINEMA PRO ULTRA PREMIUM 2025      🎬
-    🎬        SISTEMA MEGA AVANÇADO           🎬
-    🎬                                        🎬
-    🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬
-    
-    ⚡ INICIALIZANDO SISTEMA...
-    """)
-    
-    # Verificar banco de dados
-    init_db()
-    print("✅ Banco de dados inicializado")
-    
-    # Iniciar tarefas agendadas
-    agendar_tarefas()
-    print("✅ Tarefas agendadas configuradas")
-    
-    # Estatísticas iniciais
-    atualizar_estatisticas()
-    print("✅ Estatísticas atualizadas")
-    
-    print(f"""
-    📊 CONFIGURAÇÕES DO SISTEMA:
-    • 👑 Admin: @ayltonanna7
-    • 🎬 Catálogo: {sum(len(v) for v in CATALOGO_PREMIUM.values())} títulos
-    • 💰 Planos VIP: {len(PLANOS_VIP)} opções
-    • 📱 Plataforma: Telegram Bot
-    
-    🚀 RECURSOS ATIVOS:
-    • ✅ Sistema de pedidos avançado
-    • ✅ Catálogo mega expandido  
-    • ✅ Sistema VIP completo
-    • ✅ Recomendações AI
-    • ✅ Sistema de recompensas
-    • ✅ Painel admin profissional
-    • ✅ Web interface
-    • ✅ API REST
-    
-    ⚡ SISTEMA PRONTO PARA PRODUÇÃO!
-    """)
+📋 *COMANDOS NO GRUPO:*
+`/recomendacao` - Filme do dia
+`/lancamentos` - Novidades da semana  
+`/catalogo` - Catálogo completo
+`/trailer` - Ver trailers
 
-if __name__ == '__main__':
-    # Inicializar sistema
-    inicializar_sistema()
-    
-    # Configurar webhook ou polling
+💡 *Use /start no privado para:*
+• Fazer pedidos completos
+• Ver seus créditos  
+• Comprar mais créditos
+• Acessar catálogo completo
+
+📞 *ATENDIMENTO:* @{ADMIN_USERNAME}
+            """
+            
+            bot.send_message(group_id, welcome_msg, parse_mode='Markdown')
+
+# 🚀 INICIAR BOT
+print("""
+🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬
+🎬                                        🎬
+🎬     CINEMA PRO ULTRA - BOT TELEGRAM    🎬
+🎬          SISTEMA PREMIUM 2025          🎬
+🎬                                        🎬
+🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬🎬
+
+⚡ INICIANDO SISTEMA...
+""")
+
+print("✅ Banco de dados inicializado")
+print(f"👑 Admin: @{ADMIN_USERNAME}")
+print(f"🎬 Catálogo: {sum(len(v) for v in CATALOGO_PREMIUM.values())} títulos")
+print("💰 Sistema de créditos ativo")
+print("👑 Sistema VIP configurado")
+print("📦 Sistema de pedidos pronto")
+print("📊 Painel admin operacional")
+
+print("\n🚀 BOT INICIADO COM SUCESSO!")
+print("⚡ Aguardando comandos...")
+
+# Manter o bot rodando
+while True:
     try:
-        # Remover webhook anterior
-        bot.remove_webhook()
-        time.sleep(1)
-        
-        # Configurar webhook (para produção)
-        WEBHOOK_URL = os.environ.get('WEBHOOK_URL', 'https://your-domain.com/webhook')
-        bot.set_webhook(url=WEBHOOK_URL)
-        print(f"✅ Webhook configurado: {WEBHOOK_URL}")
-        
-        # Iniciar servidor Flask
-        port = int(os.environ.get('PORT', 5000))
-        app.run(
-            host='0.0.0.0',
-            port=port,
-            debug=False,
-            threaded=True
-        )
+        bot.polling(none_stop=True, interval=0, timeout=20)
     except Exception as e:
-        print(f"⚠️ Usando polling: {e}")
-        
-        # Modo polling (para desenvolvimento)
-        while True:
-            try:
-                bot.polling(none_stop=True, interval=0, timeout=20)
-            except Exception as poll_error:
-                print(f"❌ Erro no polling: {poll_error}")
-                time.sleep(5)
-                continue
+        print(f"❌ Erro no polling: {e}")
+        time.sleep(5)
+        continue
